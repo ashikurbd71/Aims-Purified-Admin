@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosSecure = axios.create({
-  baseURL: "https://admin-server.englishhealer.com/v1",
+  baseURL: "http://localhost:5000/v1",
   withCredentials: true,
 });
 

@@ -1,18 +1,21 @@
 import React, { useContext } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Avatar from "/male.png";
-import FeaturedImage from "/englishHealerLogo.png";
+import FeaturedImage from "../../../assets/logo-aims.jpg";
 import {
   AppWindow,
   BookOpen,
   BookOpenText,
   Box,
   Calendar,
+  CalendarDays,
   ChartCandlestick,
   ChartNoAxesCombined,
   ClipboardList,
+  ClipboardPen,
   ClipboardPenLine,
   Component,
+  Container,
   FolderKanban,
   List,
   LogOut,
@@ -33,70 +36,49 @@ const NAVIGATION_ITEMS = [
     icon: <ChartNoAxesCombined />,
     label: "Overview",
   },
-  {
-    to: "/team",
-    icon: <UsersRound />,
-    label: "Team Management",
-  },
-  {
-    to: "/course",
-    icon: <AppWindow />,
-    label: "Course Management",
-  },
-  {
-    to: "/notice",
-    icon: <Box />,
-    label: "Notice Management",
-  },
-  {
-    to: "/calendar",
-    icon: <List />,
-    label: "Admission Calendar",
-  },
-  {
-    to: "/student",
-    icon: <ClipboardPenLine />,
-    label: "Student Management",
-  },
-  {
-    to: "/enrollment",
-    icon: <ClipboardList />,
-    label: "Enrollment",
-  },
-  {
-    to: "/coupon",
-    icon: <Component />,
-    label: "Coupon Management",
-  },
   // {
-  //   to: "/success-story",
-  //   icon: <BookOpenText />,
-  //   label: "Success Story",
+  //   to: "/team",
+  //   icon: <UsersRound />,
+  //   label: "Team Management",
   // },
   {
-    to: "/student-review",
-    icon: <Star />,
-    label: "Student Review",
+    to: "/category-management",
+    icon: <ClipboardPen />,
+    label: "Category Management",
   },
+  // {
+  //   to: "/notice",
+  //   icon: <Box />,
+  //   label: "Notice Management",
+  // },
+  {
+    to: "/products-management",
+    icon: <Container />,
+    label: "Products Management",
+  },
+
+
+  // {
+  //   to: "/coupon",
+  //   icon: <Component />,
+  //   label: "Coupon Management",
+  // },
+
+  // {
+  //   to: "/student-review",
+  //   icon: <Star />,
+  //   label: "Student Review",
+  // },
+
+
 
   {
-    to: "/book",
-    icon: <BookOpen />,
-    label: "Book",
-  },
-
-  {
-    to: "/shipments",
-    icon: <ChartCandlestick />,
-    label: "Shipments",
+    to: "/order-management",
+    icon: <CalendarDays />,
+    label: "Orders Management",
   },
 
 
-  {
-    to: "/live-class",
-    icon: <Calendar />,
-    label: "Live Class",
-  },
 
   // book
 ];
@@ -145,7 +127,7 @@ const SideBar = () => {
           <img
             src={FeaturedImage || "https://via.placeholder.com/150"}
             alt="English Healer"
-            className="h-24 object-contain w-28"
+            className="h-24 ml-16 object-contain w-28"
           />
         </div>
       </Link>
@@ -154,14 +136,14 @@ const SideBar = () => {
       <div nav className="flex-1">
         <ul className="space-y-3 pb-2">
           {NAVIGATION_ITEMS?.map((item, index) => {
-            // If the item is restricted to admins, hide it for non-admin users
-            if (
-              (item.label === "Coupon Management" ||
-                item.label === "Team Management") &&
-              !authdata?.role?.includes("ADMIN", "DEVELOPER")
-            ) {
-              return null; // Don't show these items unless the user is an admin
-            }
+            // Remove this block if you want all users to see all items
+            // if (
+            //   (item.label === "Coupon Management" ||
+            //     item.label === "Team Management") &&
+            //   !authdata?.role?.includes("ADMIN", "DEVELOPER")
+            // ) {
+            //   return null;
+            // }
 
             const isActive = location.pathname === item.to;
 
@@ -170,8 +152,8 @@ const SideBar = () => {
                 <Link
                   to={item.to}
                   className={`flex items-center gap-2 p-3 font-bold rounded-lg transition-colors text-sm lg:text-base duration-150 
-            ${isActive
-                      ? "bg-gradient-to-r from-[#691094] to-[#480569] text-white"
+        ${isActive
+                      ? "bg-gradient-to-r from-[#007b45] to-[#363836] text-white"
                       : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 hover:text-gray-900"
                     }`}
                 >

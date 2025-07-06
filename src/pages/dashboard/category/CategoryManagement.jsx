@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import CouponCreateForm from "./CouponCreateForm";
+import CouponCreateForm from "./CategoryCreateForm";
 
 import { useQuery } from "@tanstack/react-query";
 import useAxiosSecure from "@/hooks/useAxiosSecure";
@@ -70,10 +70,10 @@ const CouponManagement = () => {
     refetch,
     isLoading,
   } = useQuery({
-    queryKey: ["couponManagement"],
+    queryKey: ["categoriesManagement"],
     queryFn: async () => {
       try {
-        const res = await axiosSecure.get("/coupon");
+        const res = await axiosSecure.get("/categories");
         (res.data);
         return res?.data?.data;
       } catch (error) {
@@ -111,15 +111,15 @@ const CouponManagement = () => {
     <div>
       <CustomMetaTag title={"Coupon List"} />
       <div className=" flex items-center lg:flex-row flex-col lg:gap-0 gap-5 justify-between">
-        <h1 className="text-2xl text-gray-600">Coupon Management</h1>
+        <h1 className="text-2xl text-gray-600">Category Management</h1>
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogTrigger asChild>
-            {["ADMIN", "DEVELOPER"].includes(authdata?.role) && (
-              <Button size={"sm"} className="rounded-3xl">
-                Add new Coupon
-                <Plus className="ml-2" />
-              </Button>
-            )}
+
+            <Button size={"sm"} className="rounded-3xl">
+              Add new Category
+              <Plus className="ml-2" />
+            </Button>
+
           </DialogTrigger>
           <DialogContent className="p-8 min-w-[45%] max-h-screen overflow-auto">
             {/* Form */}
@@ -136,7 +136,7 @@ const CouponManagement = () => {
         <div className="p-4 md:px-6 py-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-1 space-y-2">
           <div>
             <div className="flex items-center gap-2 ">
-              <h1 className="text-lg font-bold">Total Coupon</h1>
+              <h1 className="text-lg font-bold">Total Category</h1>
               <span className="bg-gray-100 dark:text-gray-700 px-2 rounded-3xl text-sm font-semibold">
                 {item?.length} Total
               </span>
@@ -157,13 +157,13 @@ const CouponManagement = () => {
               <TableHeader>
                 <TableRow className="bg-gray-50 dark:bg-gray-900 px-6">
                   <TableHead className="text-gray-800 dark:text-gray-100 font-bold border-r">
-                    Coupon Name
+                    Category Name
                   </TableHead>
                   <TableHead className="text-gray-800 dark:text-gray-100 font-bold border-r">
-                    Coupon Create Date
+                    Category Create Date
                   </TableHead>
                   <TableHead className="text-gray-800 dark:text-gray-100 font-bold border-r">
-                    Coupon Expire Date
+                    Category Deatils
                   </TableHead>
                   <TableHead className="text-gray-800 text-center dark:text-gray-100 font-bold">
                     Action
@@ -175,7 +175,7 @@ const CouponManagement = () => {
                   <TableRow key={index}>
                     <TableCell className="flex items-center gap-3 border-r">
                       <div>
-                        <p className="font-semibold">{coupon?.code}</p>
+                        <p className="font-semibold">{coupon?.name}</p>
                       </div>
                     </TableCell>
                     <TableCell className="border-r">
@@ -183,7 +183,7 @@ const CouponManagement = () => {
                     </TableCell>
                     <TableCell className="border-r">
                       {" "}
-                      {coupon?.expiresAt?.split("T")[0]}
+                      {coupon?.description}
                     </TableCell>
 
                     {/* Update and delete button */}

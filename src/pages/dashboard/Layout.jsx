@@ -21,8 +21,8 @@ const Layout = () => {
         {/* Profile Bar */}
         <ProfileBar toggleSidebar={() => setSidebarOpen(!isSidebarOpen)} />
 
-        {/* Main Content */}
-        <ServerUpgradeWarning />
+        {/* Main Content
+        <ServerUpgradeWarning /> */}
         <div className="p-3 md:p-6 flex-grow">
           <Outlet />
         </div>

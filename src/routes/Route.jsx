@@ -21,27 +21,26 @@ import DashboardLayout from "@/pages/dashboard/Layout";
 import { createBrowserRouter } from "react-router-dom";
 import { PrivateRoutes, SignedInProtectedRoutes } from "./ProtectedRoutes";
 import Course from "@/pages/dashboard/course/CourseManagement";
-import Student from "@/pages/dashboard/student/ManageStudents";
-import Enrolement from "@/pages/dashboard/enrolement/EnrolementManage";
+
 import NoticeManagement from "@/pages/dashboard/notice/NoticeManagement";
 import TeamManage from "@/pages/dashboard/team/TeamManage";
-import AddmissionCalendar from "@/pages/dashboard/admission/AdmissionCalendar";
+
 import CourseDetails from "@/pages/dashboard/course/components/CourseDetails";
 import AdmissionForm from "@/pages/dashboard/components/forms/admission/AdmissionForm";
 import AdmissionUpdate from "@/pages/dashboard/components/update/forms/admission/AdmissionUpdate";
-import AdmissionDetails from "@/pages/dashboard/admission/AdmissionDetails";
+
 import MemberDetails from "@/pages/dashboard/team/components/MemberDetails";
 import ClassDetails from "@/pages/dashboard/course/class/components/ClassDetails";
-import ManageStudents from "@/pages/dashboard/student/ManageStudents";
+
 import Profile from "@/pages/dashboard/team/components/Profile";
-import CouponManagement from "@/pages/dashboard/coupon/CouponManagement";
+import CouponManagement from "@/pages/dashboard/category/CategoryManagement";
 import SubjectChapter from "@/pages/dashboard/course/class/components/SubjectChapter";
 import NotFoundPage from "@/components/global/NotFound";
 import StudentReview from "@/pages/dashboard/student-review/StudentReview";
 import BookList from "@/pages/dashboard/Book/BookList";
 import ShipmentList from "@/pages/dashboard/Shipment/ShipmentList";
 import ViewClass from "@/pages/dashboard/course/class/components/ViewClass";
-import LiveClass from "@/pages/dashboard/LiveClass/LiveClass";
+
 
 // Define the routing structure using `createBrowserRouter`.
 const Router = createBrowserRouter([
@@ -99,22 +98,8 @@ const Router = createBrowserRouter([
           </PrivateRoutes>
         ),
       },
-      {
-        path: "/student",
-        element: (
-          <PrivateRoutes>
-            <Student />
-          </PrivateRoutes>
-        ),
-      },
-      {
-        path: "/enrollment",
-        element: (
-          <PrivateRoutes>
-            <Enrolement />
-          </PrivateRoutes>
-        ),
-      },
+
+
       {
         path: "/notice",
         element: (
@@ -131,16 +116,9 @@ const Router = createBrowserRouter([
           </PrivateRoutes>
         ),
       },
+
       {
-        path: "/calendar",
-        element: (
-          <PrivateRoutes>
-            <AddmissionCalendar />
-          </PrivateRoutes>
-        ),
-      },
-      {
-        path: "/coupon",
+        path: "/category-management",
         element: (
           <PrivateRoutes>
             <CouponManagement />
@@ -206,14 +184,7 @@ const Router = createBrowserRouter([
         path: "/admissionUpdate-form/:id",
         element: <AdmissionUpdate />,
       },
-      {
-        path: "/admission-details/:id",
-        element: (
-          <PrivateRoutes>
-            <AdmissionDetails />
-          </PrivateRoutes>
-        ),
-      },
+
       // member details
       {
         path: "/member-details/:id",
@@ -240,22 +211,8 @@ const Router = createBrowserRouter([
           </PrivateRoutes>
         ),
       },
-      {
-        path: "/manage-students/:id",
-        element: (
-          <PrivateRoutes>
-            <ManageStudents />
-          </PrivateRoutes>
-        ),
-      },
-      // {
-      //   path: "success-story",
-      //   element: (
-      //     <PrivateRoutes>
-      //       <SuccessStories />
-      //     </PrivateRoutes>
-      //   ),
-      // },
+
+
 
       {
         path: "student-review",
@@ -266,14 +223,7 @@ const Router = createBrowserRouter([
         ),
       },
 
-      {
-        path: "/live-class",
-        element: (
-          <PrivateRoutes>
-            <LiveClass />
-          </PrivateRoutes>
-        ),
-      },
+
     ],
   },
 ]);

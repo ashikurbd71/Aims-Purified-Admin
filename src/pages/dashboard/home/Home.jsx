@@ -15,9 +15,9 @@ const Home = () => {
   const [smsBalanceData] = useSmsBalanceData();
   const [studentData] = useStudentData();
   const [couponData] = useCouponData();
-  const [shipmentData]=useShipmentData()
+  const [shipmentData] = useShipmentData()
 
-  const {userData}= User()
+  const { userData } = User()
   const total = enrollmentData
     ?.filter((item) => item.enrollment?.status === "COMPLETED") // Filter only items with status "COMPLETED"
     ?.reduce(
@@ -25,7 +25,7 @@ const Home = () => {
       0
     );
   const roundedTotal = parseFloat(total?.toFixed(2)) || 0; // Handle potential undefined total
-const pendingShipment = shipmentData?.filter((item)=>item.status="PENDING")
+  const pendingShipment = shipmentData?.filter((item) => item.status = "PENDING")
 
   return (
     <>
@@ -139,7 +139,7 @@ const pendingShipment = shipmentData?.filter((item)=>item.status="PENDING")
                   </span>
                 </div>
                 <p className="text-sm font-bold text-gray-600 mt-6">
-                  Total Students
+                  Total Customers
                 </p>
                 <p className="flex items-center justify-between mt-2">
                   <span className="text-4xl font-extrabold">
@@ -210,7 +210,7 @@ const pendingShipment = shipmentData?.filter((item)=>item.status="PENDING")
               <CardContent className="p-0">
                 <div className="flex items-center justify-between">
                   <div className="bg-gray-100 dark:text-gray-800 h-10 w-10 rounded-full flex items-center justify-center">
-                    <Truck/>
+                    <Truck />
                   </div>
 
                   <span>
@@ -244,50 +244,50 @@ const pendingShipment = shipmentData?.filter((item)=>item.status="PENDING")
             </Card>
           </Link>
 
-          
-            {userData?.role === "DEVELOPER" && (
-              <Card className="p-6 rounded-3xl">
-                <a href="https://bulksmsbd.net/bkash/newindex" target="_blank">
-                  {" "}
-                  <CardContent className="p-0">
-                    <div className="flex items-center justify-between">
-                      <div className="bg-gray-100 dark:text-gray-800 h-10 w-10 rounded-full flex items-center justify-center">
-                        <Mail />
-                      </div>
 
-                      <span>
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="#cbd5e1"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="lucide lucide-ellipsis-vertical"
-                        >
-                          <circle cx="12" cy="12" r="1" />
-                          <circle cx="12" cy="5" r="1" />
-                          <circle cx="12" cy="19" r="1" />
-                        </svg>
-                      </span>
+          {userData?.role === "DEVELOPER" && (
+            <Card className="p-6 rounded-3xl">
+              <a href="https://bulksmsbd.net/bkash/newindex" target="_blank">
+                {" "}
+                <CardContent className="p-0">
+                  <div className="flex items-center justify-between">
+                    <div className="bg-gray-100 dark:text-gray-800 h-10 w-10 rounded-full flex items-center justify-center">
+                      <Mail />
                     </div>
-                    <p className="text-sm font-bold text-gray-600 mt-6">
-                      Remaining SMS
-                    </p>
-                    <p className="flex items-center justify-between mt-2">
-                      <span className="text-4xl font-extrabold pr-2">
-                        {smsBalanceData?.balance
-                          ? Math.floor(smsBalanceData?.balance / 0.35)
-                          : 0}
-                      </span>
-                    </p>
-                  </CardContent>
-                </a>
-              </Card>
-            )}
+
+                    <span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#cbd5e1"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="lucide lucide-ellipsis-vertical"
+                      >
+                        <circle cx="12" cy="12" r="1" />
+                        <circle cx="12" cy="5" r="1" />
+                        <circle cx="12" cy="19" r="1" />
+                      </svg>
+                    </span>
+                  </div>
+                  <p className="text-sm font-bold text-gray-600 mt-6">
+                    Remaining SMS
+                  </p>
+                  <p className="flex items-center justify-between mt-2">
+                    <span className="text-4xl font-extrabold pr-2">
+                      {smsBalanceData?.balance
+                        ? Math.floor(smsBalanceData?.balance / 0.35)
+                        : 0}
+                    </span>
+                  </p>
+                </CardContent>
+              </a>
+            </Card>
+          )}
         </div>
       </div>
     </>
