@@ -32,12 +32,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import CourseCard from "./components/CourseCard";
-import CourseCreateForm from "../components/forms/course/CourseCreateForm";
+
 import User from "@/hooks/userData";
 import useCourseData from "@/hooks/useCourseData";
 import CustomMetaTag from "@/components/global/CustomMetaTags";
+import ProductCreateForm from "../components/forms/course/ProductCreateForm";
 
-const Course = () => {
+const ProductsManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredCourses, setFilteredCourses] = useState([]);
@@ -133,26 +134,26 @@ const Course = () => {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start mb-8">
         <div>
-          <h1 className="text-2xl font-bold mb-2">Course Management</h1>
-          <p className="text-gray-600">Create and manage your courses</p>
+          <h1 className="text-2xl font-bold mb-2">Products Management</h1>
+          <p className="text-gray-600">Create and manage your products</p>
         </div>
 
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogTrigger asChild>
-            {["ADMIN", "DEVELOPER"].includes(userData?.role) && (
-              <Button className="mt-4 md:mt-0 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-md">
-                <Plus className="mr-2 h-4 w-4" />
-                Create Course
-              </Button>
-            )}
+
+            <Button className="mt-4 md:mt-0 rounded-full bg-black shadow-md">
+              <Plus className="mr-2 h-4 w-4" />
+              Create Product
+            </Button>
+
           </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold">
-                Create New Course
+                Create New Product
               </DialogTitle>
             </DialogHeader>
-            <CourseCreateForm
+            <ProductCreateForm
               refetch={courseDataRefetch}
               onClose={handleModalClose}
             />
@@ -167,7 +168,7 @@ const Course = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500 font-medium">
-                  Total Courses
+                  Total Products
                 </p>
                 <p className="text-3xl font-bold text-purple-700">
                   {stats.total}
@@ -185,7 +186,7 @@ const Course = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500 font-medium">
-                  Active Courses
+                  Active Products
                 </p>
                 <p className="text-3xl font-bold text-blue-600">
                   {stats.active || 0}
@@ -205,7 +206,7 @@ const Course = () => {
         <div className="relative w-full md:w-1/3">
           <Input
             type="text"
-            placeholder="Search courses..."
+            placeholder="Search products..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -221,9 +222,8 @@ const Course = () => {
             <Button
               variant={viewMode === "grid" ? "default" : "ghost"}
               size="sm"
-              className={`rounded-md ${
-                viewMode === "grid" ? "bg-white shadow-sm" : ""
-              }`}
+              className={`rounded-md ${viewMode === "grid" ? "bg-white shadow-sm" : ""
+                }`}
               onClick={() => setViewMode("grid")}
             >
               <Grid className="h-4 w-4" />
@@ -231,9 +231,8 @@ const Course = () => {
             <Button
               variant={viewMode === "list" ? "default" : "ghost"}
               size="sm"
-              className={`rounded-md ${
-                viewMode === "list" ? "bg-white shadow-sm" : ""
-              }`}
+              className={`rounded-md ${viewMode === "list" ? "bg-white shadow-sm" : ""
+                }`}
               onClick={() => setViewMode("list")}
             >
               <List className="h-4 w-4" />
@@ -248,10 +247,10 @@ const Course = () => {
                 {sortOrder === "newest"
                   ? "Newest"
                   : sortOrder === "oldest"
-                  ? "Oldest"
-                  : sortOrder === "nameAsc"
-                  ? "A-Z"
-                  : "Z-A"}
+                    ? "Oldest"
+                    : sortOrder === "nameAsc"
+                      ? "A-Z"
+                      : "Z-A"}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -278,9 +277,8 @@ const Course = () => {
       {/* Course Content */}
       {isLoading ? (
         <div
-          className={`grid grid-cols-1 ${
-            viewMode === "grid" ? "md:grid-cols-2 lg:grid-cols-3" : ""
-          } gap-6`}
+          className={`grid grid-cols-1 ${viewMode === "grid" ? "md:grid-cols-2 lg:grid-cols-3" : ""
+            } gap-6`}
         >
           {[1, 2, 3, 4, 5, 6].map((item) => (
             <Card key={item} className="overflow-hidden">
@@ -324,7 +322,7 @@ const Course = () => {
                   Create New Course
                 </DialogTitle>
               </DialogHeader>
-              <CourseCreateForm
+              <ProductCreateForm
                 refetch={courseDataRefetch}
                 onClose={handleModalClose}
               />
@@ -361,4 +359,4 @@ const Course = () => {
   );
 };
 
-export default Course;
+export default ProductsManagement;

@@ -13,7 +13,7 @@ import { getTeacher } from "@/Api/selectorApi";
 import axios from "axios";
 import ButtonLoader from "@/components/global/ButtonLoader";
 
-const CourseCreateForm = ({ refetch, onClose }) => {
+const ProductCreateForm = ({ refetch, onClose }) => {
   const [hasFb, setHasFb] = useState("No");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const axiosSecure = useAxiosSecure()
@@ -705,4 +705,4 @@ const CourseCreateForm = ({ refetch, onClose }) => {
   );
 };
 
-export default CourseCreateForm;
+export default ProductCreateForm;

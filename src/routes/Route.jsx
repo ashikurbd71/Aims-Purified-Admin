@@ -20,7 +20,7 @@ import DashboardHome from "@/pages/dashboard/home/Home";
 import DashboardLayout from "@/pages/dashboard/Layout";
 import { createBrowserRouter } from "react-router-dom";
 import { PrivateRoutes, SignedInProtectedRoutes } from "./ProtectedRoutes";
-import Course from "@/pages/dashboard/course/CourseManagement";
+
 
 import NoticeManagement from "@/pages/dashboard/notice/NoticeManagement";
 import TeamManage from "@/pages/dashboard/team/TeamManage";
@@ -41,6 +41,7 @@ import BookList from "@/pages/dashboard/Book/BookList";
 import ShipmentList from "@/pages/dashboard/Shipment/ShipmentList";
 import ViewClass from "@/pages/dashboard/course/class/components/ViewClass";
 import CategoryManagement from "@/pages/dashboard/category/CategoryManagement";
+import ProductsManagement from "@/pages/dashboard/course/ProductsManagement";
 
 
 // Define the routing structure using `createBrowserRouter`.
@@ -92,11 +93,11 @@ const Router = createBrowserRouter([
         ),
       },
       {
-        path: "/course",
+        path: "/products-management",
         element: (
-          <PrivateRoutes>
-            <Course />
-          </PrivateRoutes>
+
+          <ProductsManagement />
+
         ),
       },
 
