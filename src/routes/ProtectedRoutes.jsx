@@ -55,7 +55,7 @@ export const PrivateRoutes = ({ children }) => {
   }
 
   // Redirect to sign-in if not authenticated
-  return <Navigate to={"/sign-in"} state={{ from: location }} replace />;
+  // return <Navigate to={"/sign-in"} state={{ from: location }} replace />;
 };
 
 // Prop validation for PrivateRoutes

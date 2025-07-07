@@ -21,8 +21,8 @@ const CouponCreateForm = ({ refetch, onClose }) => {
     description: Yup.string()
       .required("Description code is required"),
 
-    name: Yup.date()
-      .required("Category date is required")
+    name: Yup.string()
+      .required("Category  is required")
 
 
   });
@@ -30,7 +30,7 @@ const CouponCreateForm = ({ refetch, onClose }) => {
   const formik = useFormik({
     initialValues: {
       name: "",
-      expidescriptionesAt: "",
+      description: "",
 
     },
     validationSchema,
@@ -43,10 +43,12 @@ const CouponCreateForm = ({ refetch, onClose }) => {
 
         });
 
-        if (response.status === 201) {
-          "New Category added successfully:", values;
+        console.log("Response:", response);
 
-          toast.success("New Category Added successfully");
+        if (response?.data?.statusCode === 201) {
+
+
+          toast.success(response?.data?.message);
 
           // Reset form values
           handleReset();
@@ -78,9 +80,7 @@ const CouponCreateForm = ({ refetch, onClose }) => {
   });
   const handleReset = () => {
     formik.resetForm();
-    setSelectedOptions([]);
-    setCourseOptions([]);
-    setCourseOptions([]);
+
   };
 
 

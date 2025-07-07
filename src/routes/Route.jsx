@@ -33,13 +33,14 @@ import MemberDetails from "@/pages/dashboard/team/components/MemberDetails";
 import ClassDetails from "@/pages/dashboard/course/class/components/ClassDetails";
 
 import Profile from "@/pages/dashboard/team/components/Profile";
-import CouponManagement from "@/pages/dashboard/category/CategoryManagement";
+
 import SubjectChapter from "@/pages/dashboard/course/class/components/SubjectChapter";
 import NotFoundPage from "@/components/global/NotFound";
 import StudentReview from "@/pages/dashboard/student-review/StudentReview";
 import BookList from "@/pages/dashboard/Book/BookList";
 import ShipmentList from "@/pages/dashboard/Shipment/ShipmentList";
 import ViewClass from "@/pages/dashboard/course/class/components/ViewClass";
+import CategoryManagement from "@/pages/dashboard/category/CategoryManagement";
 
 
 // Define the routing structure using `createBrowserRouter`.
@@ -71,9 +72,9 @@ const Router = createBrowserRouter([
     path: "/",
     element: (
       // <PrivateRoutes>
-      <PrivateRoutes>
-        <DashboardLayout />
-      </PrivateRoutes>
+
+      <DashboardLayout />
+
     ),
     errorElement: <NotFoundPage />,
     children: [
@@ -120,9 +121,9 @@ const Router = createBrowserRouter([
       {
         path: "/category-management",
         element: (
-          <PrivateRoutes>
-            <CouponManagement />
-          </PrivateRoutes>
+
+          <CategoryManagement />
+
         ),
       },
       // course details

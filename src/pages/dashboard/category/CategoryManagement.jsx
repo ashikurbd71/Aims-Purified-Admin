@@ -34,14 +34,15 @@ import CouponCreateForm from "./CategoryCreateForm";
 
 import { useQuery } from "@tanstack/react-query";
 import useAxiosSecure from "@/hooks/useAxiosSecure";
-import CouponUpdate from "../components/update/forms/coupon/CouponUpdate";
+
 import { AuthContext } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import Loading from "@/components/global/Loading";
 import CustomMetaTag from "@/components/global/CustomMetaTags";
+import CategoryUpdate from "../components/update/forms/coupon/CouponUpdate";
 
 
-const CouponManagement = () => {
+const CategoryManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleModalClose = () => {
@@ -87,9 +88,9 @@ const CouponManagement = () => {
   const handleDelete = async (id) => {
     setIsDeleting(true);
     try {
-      const response = await axiosSecure.delete(`/coupon/${id}`);
-      if (response.status === 200) {
-        toast.success("Coupon  deleted successfully!");
+      const response = await axiosSecure.delete(`/categories/${id}`);
+      if (response.data.statusCode === 200) {
+        toast.success(response.data.message);
         refetch();
       } else {
         toast.error("Something went wrong. Please try again.");
@@ -106,10 +107,11 @@ const CouponManagement = () => {
     }
   };
   const { authdata } = useContext(AuthContext);
+
   (item);
   return (
     <div>
-      <CustomMetaTag title={"Coupon List"} />
+      <CustomMetaTag title={"Category List"} />
       <div className=" flex items-center lg:flex-row flex-col lg:gap-0 gap-5 justify-between">
         <h1 className="text-2xl text-gray-600">Category Management</h1>
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -171,19 +173,19 @@ const CouponManagement = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {item?.map((coupon, index) => (
+                {item?.map((category, index) => (
                   <TableRow key={index}>
                     <TableCell className="flex items-center gap-3 border-r">
                       <div>
-                        <p className="font-semibold">{coupon?.name}</p>
+                        <p className="font-semibold">{category?.name}</p>
                       </div>
                     </TableCell>
                     <TableCell className="border-r">
-                      {coupon?.createdAt?.split("T")[0]}
+                      {category?.createdAt?.split("T")[0]}
                     </TableCell>
                     <TableCell className="border-r">
                       {" "}
-                      {coupon?.description}
+                      {category?.description}
                     </TableCell>
 
                     {/* Update and delete button */}
@@ -205,73 +207,72 @@ const CouponManagement = () => {
                       </TooltipProvider> */}
 
                         {/* update */}
-                        {["ADMIN", "DEVELOPER"].includes(authdata?.role) && (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger>
-                                <Dialog
-                                  open={isUpdateModalOpen}
-                                  onOpenChange={setIsUpdateModalOpen}
-                                >
-                                  <DialogTrigger asChild>
-                                    <Pen
-                                      className="p-1 cursor-pointer"
-                                      onClick={() =>
-                                        handleUpdateModalOpen(coupon._id)
-                                      }
+
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Dialog
+                                open={isUpdateModalOpen}
+                                onOpenChange={setIsUpdateModalOpen}
+                              >
+                                <DialogTrigger asChild>
+                                  <Pen
+                                    className="p-1 cursor-pointer"
+                                    onClick={() =>
+                                      handleUpdateModalOpen(category.id)
+                                    }
+                                  />
+                                </DialogTrigger>
+                                <DialogContent className="p-8 min-w-[45%] max-h-screen overflow-auto">
+                                  {isUpdateModalOpen && selectedCouponId && (
+                                    <CategoryUpdate
+                                      refetch={refetch}
+                                      item={selectedCouponId}
+                                      onClose={handleUpdateModalClose}
                                     />
-                                  </DialogTrigger>
-                                  <DialogContent className="p-8 min-w-[45%] max-h-screen overflow-auto">
-                                    {isUpdateModalOpen && selectedCouponId && (
-                                      <CouponUpdate
-                                        refetch={refetch}
-                                        item={selectedCouponId}
-                                        onClose={handleUpdateModalClose}
-                                      />
-                                    )}
-                                  </DialogContent>
-                                </Dialog>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Update</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        )}
-                        {["ADMIN", "DEVELOPER"].includes(authdata?.role) && (
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <button className="hover:text-red-500">
-                                <Trash className="p-1" />
-                              </button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                  Are you absolutely sure?
-                                </AlertDialogTitle>
-                                <AlertDialogDescription className="text-black">
-                                  This action cannot be undone. This will
-                                  permanently delete this coupon .
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel disabled={isDeleting}>
-                                  Cancel
-                                </AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleDelete(coupon?._id)}
-                                  disabled={isDeleting}
-                                  className="bg-red-600 hover:bg-red-500"
-                                >
-                                  {isDeleting
-                                    ? "Deleting..."
-                                    : "Yes, Delete it!"}
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        )}
+                                  )}
+                                </DialogContent>
+                              </Dialog>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Update</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <button className="hover:text-red-500">
+                              <Trash className="p-1" />
+                            </button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                Are you absolutely sure?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription className="text-black">
+                                This action cannot be undone. This will
+                                permanently delete this coupon .
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel disabled={isDeleting}>
+                                Cancel
+                              </AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDelete(category?.id)}
+                                disabled={isDeleting}
+                                className="bg-red-600 hover:bg-red-500"
+                              >
+                                {isDeleting
+                                  ? "Deleting..."
+                                  : "Yes, Delete it!"}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+
                       </div>
                     </TableCell>
                   </TableRow>
@@ -285,4 +286,4 @@ const CouponManagement = () => {
   );
 };
 
-export default CouponManagement;
+export default CategoryManagement;

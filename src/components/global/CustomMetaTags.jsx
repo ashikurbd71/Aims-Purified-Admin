@@ -22,7 +22,7 @@ const CustomMetaTag = ({ title, image, description }) => {
     // Helmet component for dynamically adding meta tags to the document head.
     <Helmet prioritizeSeoTags>
       {/* Set the page title dynamically. Includes "English Healer" as a prefix. */}
-      <title>{title ? `English Healer | ${title}` : "English Healer"}</title>
+      <title>{title ? `Aims Purefied | ${title}` : "English Healer"}</title>
 
       {/* Open Graph meta tags for better integration with social media platforms */}
       <meta
