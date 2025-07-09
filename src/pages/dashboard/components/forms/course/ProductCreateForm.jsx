@@ -9,36 +9,45 @@ import Select, { components } from "react-select";
 import { Button } from "@/components/ui/button";
 import useAxiosSecure from "@/hooks/useAxiosSecure";
 import { toast } from "sonner";
-import { getTeacher } from "@/Api/selectorApi";
+
 import axios from "axios";
 import ButtonLoader from "@/components/global/ButtonLoader";
+import { getCategory } from "@/Api/selectorApi";
 
 const ProductCreateForm = ({ refetch, onClose }) => {
   const [hasFb, setHasFb] = useState("No");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState([]);
+  const [selectedColor, setSelectedColor] = useState([]);
   const axiosSecure = useAxiosSecure()
-  const options = [
-    { value: "yes", label: "Yes" },
-    { value: "no", label: "No" },
-  ];
+  const IMGBB_API_KEY = '90087a428cac94ac2e8021a26aeb9f9e';
   // options for book
-  const bookOptions = [
-    { value: true, label: "Yes" },
-    { value: false, label: "No" },
+  const productColor = [
+    { value: 'red', label: "Red" },
+    { value: 'green', label: "Green" },
+    { value: 'blue', label: "Blue" },
+    { value: 'yellow', label: "Yellow" },
+    { value: 'black', label: "Black" },
+    { value: 'white', label: "White" },
+    { value: 'orange', label: "Orange" },
+    { value: 'purple', label: "Purple" },
+    { value: 'pink', label: "Pink" },
+    { value: 'brown', label: "Brown" },
+    { value: 'grey', label: "Grey" },
   ];
-  const [teacherOptions, setTeacherOptions] = useState([]);
+  const [categoryOptions, setCategorytOptions] = useState([]);
 
   // Fetch teacher options from APItfhgytr
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = await getTeacher();
+        const data = await getCategory();
         // Transform API response to match Select component format
-        const options = data?.data.map((teachers) => ({
-          value: teachers._id, // Backend's teacher ID
-          label: teachers.name, // Displayed teacher name
+        const options = data?.data.map((cate) => ({
+          value: cate.id, // Backend's teacher ID
+          label: cate.name, // Displayed teacher name
         }));
-        setTeacherOptions(options);
+        setCategorytOptions(options);
       } catch (error) {
         console.error("Error fetching classes:", error);
       }
@@ -48,17 +57,19 @@ const ProductCreateForm = ({ refetch, onClose }) => {
   }, []);
 
   // Upload Image
-  const uploadImage = async (files) => {
-    if (!Array.isArray(files)) {
-      files = [files];
+
+  const uploadImage = async (file) => {
+    if (!file) {
+      console.error("No file provided for upload.");
+      return null;
     }
-    // ("Files to upload:", files);
 
     const formData = new FormData();
-    files.forEach((file) => formData.append("file", file));
+    formData.append("image", file); // ImgBB expects the key 'image' for the file
+
     try {
       const response = await axios.post(
-        "https://cdn.englishhealer.com/v1/upload/images",
+        `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,
         formData,
         {
           headers: {
@@ -66,14 +77,15 @@ const ProductCreateForm = ({ refetch, onClose }) => {
           },
         }
       );
+
       if (
         (response?.status === 200 || response?.status === 201) &&
-        response?.data
+        response?.data?.data?.url // Access the URL from ImgBB's response structure
       ) {
-        "Uploaded Images Data:", response.data;
-        return response.data;
+        console.log("Uploaded Image Data:", response.data.data.url);
+        return response.data.data.url; // Return the direct URL
       } else {
-        console.error("Image upload failed: Invalid response");
+        console.error("Image upload failed: Invalid response from ImgBB", response);
         return null;
       }
     } catch (error) {
@@ -86,7 +98,7 @@ const ProductCreateForm = ({ refetch, onClose }) => {
     try {
       const uploadPromises = Array.from(files).map((file) => uploadImage(file));
       const urls = await Promise.all(uploadPromises);
-      return urls.filter((url) => url !== null);
+      return urls.filter((url) => url !== null); // Filter out any failed uploads
     } catch (error) {
       console.error("Multiple upload failed:", error);
       return [];
@@ -96,8 +108,9 @@ const ProductCreateForm = ({ refetch, onClose }) => {
   const handleThambnailImageChange = async (event) => {
     const file = event.target.files[0];
     if (file) {
-      if (file.size > 10 * 1024 * 1024) {
+      if (file.size > 10 * 1024 * 1024) { // Keep your 10MB limit
         console.error("File size should be less than 10MB");
+        toast.error("Thumbnail file size should be less than 10MB");
         return;
       }
       formik.setFieldValue("thumbnail", file);
@@ -107,8 +120,9 @@ const ProductCreateForm = ({ refetch, onClose }) => {
   const handleFilesChange = async (event) => {
     const files = Array.from(event.currentTarget.files);
     const validFiles = files.filter((file) => {
-      if (file.size > 10 * 1024 * 1024) {
+      if (file.size > 10 * 1024 * 1024) { // Keep your 10MB limit
         console.error(`${file.name} exceeds 10MB limit`);
+        toast.error(`${file.name} exceeds 10MB limit`);
         return false;
       }
       return true;
@@ -118,8 +132,10 @@ const ProductCreateForm = ({ refetch, onClose }) => {
 
   const handleReset = () => {
     formik.resetForm();
-    setSelectedTeacher([]);
+    setSelectedCategory([]);
     setTeacherOptions([]);
+    setSelectedColor([]);
+    setHasFb("no"); // Reset hasFb state
   };
 
   const formik = useFormik({
@@ -149,7 +165,7 @@ const ProductCreateForm = ({ refetch, onClose }) => {
       slug: Yup.string().required("Slug is required"),
 
       teachers: Yup.array(),
-      // .min(1, "At least one teacher is required")
+      // .min(1, "At least one teacher is required") // Uncomment if you want to enforce at least one teacher
       price: Yup.number()
         .required("Course Price is required")
         .min(0, "Price cannot be less than 0"),
@@ -160,45 +176,57 @@ const ProductCreateForm = ({ refetch, onClose }) => {
           "Discount cannot be greater than the price",
           function (value) {
             const { price } = this.parent;
-            return value <= price;
+            return value === undefined || value === null || value <= price; // Handle optional discount
           }
         ),
       thumbnail: Yup.mixed().required("Course Thumbnail is required"),
-      files: Yup.array().of(Yup.string()).notRequired(),
-      video: Yup.string().url("Must be a valid url").notRequired(),
+      files: Yup.array().notRequired(), // Expecting File objects initially, then URLs after upload
+      video: Yup.string().url("Must be a valid URL").notRequired(),
       hasFb: Yup.string().notRequired(),
     }),
 
-    //Course Creator Submit button
+    //Course Creator  Submit button
     onSubmit: async (values, { resetForm }) => {
-      "object", values;
+      console.log("Formik values on submit:", values);
       setIsSubmitting(true);
-      // image upload
       let updatedValues = { ...values };
-
-      // Handle Thumbnail image upload
-      if (values.thumbnail instanceof File) {
-        const thumbnailImg = await uploadImage(values.thumbnail);
-        if (thumbnailImg) {
-          updatedValues.uploadedThumbnailImg = thumbnailImg?.data?.fileUrls[0];
-          formik.setFieldValue("uploadedThumbnailImg", thumbnailImg);
-        }
-      }
-
-      // Handle multiple files upload
-      if (values.files?.length > 0) {
-        const fileUrlsResponse = await uploadMultipleImages(values.files);
-        const fileUrls = fileUrlsResponse
-          .filter((response) => response.success)
-          .flatMap((response) => response.data?.fileUrls || []);
-
-        if (fileUrls.length > 0) {
-          updatedValues.uploadedFileUrls = fileUrls;
-          formik.setFieldValue("uploadedFileUrls", fileUrls);
-        }
-      }
+      let thumbnailUrl = null;
+      let uploadedFileUrls = [];
 
       try {
+        // Handle Thumbnail image upload
+        if (values.thumbnail instanceof File) {
+          thumbnailUrl = await uploadImage(values.thumbnail);
+          if (!thumbnailUrl) {
+            toast.error("Failed to upload thumbnail image.");
+            setIsSubmitting(false);
+            return; // Stop submission if thumbnail upload fails
+          }
+          updatedValues.uploadedThumbnailImg = thumbnailUrl;
+        } else if (typeof values.thumbnail === 'string' && values.thumbnail !== '') {
+          // If thumbnail is already a URL (e.g., in an edit scenario where it's not changed)
+          updatedValues.uploadedThumbnailImg = values.thumbnail;
+        }
+
+
+        // Handle multiple files upload
+        if (values.files && values.files.length > 0) {
+          const filesToUpload = values.files.filter(file => file instanceof File); // Only upload actual File objects
+          const existingFileUrls = values.files.filter(file => typeof file === 'string'); // Keep existing URLs if any
+
+          uploadedFileUrls = await uploadMultipleImages(filesToUpload);
+
+          // If some files failed to upload, show an error and potentially stop
+          if (uploadedFileUrls.length === 0 && filesToUpload.length > 0) {
+            toast.error("Failed to upload one or more additional images.");
+            setIsSubmitting(false);
+            return;
+          }
+          updatedValues.uploadedFileUrls = [...existingFileUrls, ...uploadedFileUrls]; // Combine existing with new
+        }
+
+
+        // Proceed with API call only if image uploads were successful (or not required)
         const response = await axiosSecure.post("/course/add", {
           slug: values.slug.replace(/\s+/g, "-"),
           name: values.name,
@@ -206,9 +234,9 @@ const ProductCreateForm = ({ refetch, onClose }) => {
           discountedPrice: values.discount,
           metadata: {
             description: values.description,
-            hasFb: hasFb,
-            featuredImage: updatedValues.uploadedThumbnailImg,
-            images: updatedValues?.uploadedFileUrls?.map((img) => img),
+            hasFb: values.hasFb,
+            featuredImage: updatedValues.uploadedThumbnailImg, // This will be the ImgBB URL
+            images: updatedValues?.uploadedFileUrls, // These will be the ImgBB URLs
             fbGroupLink: values.fbgrouplink,
             promoVideo: values.video,
             totalApproximateClasses: values.approximate_class,
@@ -216,46 +244,26 @@ const ProductCreateForm = ({ refetch, onClose }) => {
             totalApproximateExams: values.approximate_exams,
             areAnyBooksIncluded: values.books_inc,
           },
-
           teachers: Array.isArray(values.teachers)
-            ? values?.teachers?.map((item) => item)
+            ? values.teachers.map((item) => item)
             : null,
         });
 
         if (response.status === 201) {
-          "New Course added successfully:", values;
-
+          console.log("New Course added successfully:", response.data);
           toast.success("New Course Added successfully");
-
-          // Reset form values
           handleReset();
-
-          // Refetch the updated data
-          refetch();
-          // Close the modal
+          if (refetch) refetch();
           if (onClose) onClose();
-          setIsSubmitting(false);
         } else {
-          // toast.error("Something went wrong. Please try again.");
+          toast.error("Something went wrong. Please try again.");
         }
       } catch (error) {
-        if (error.status === 400) {
-          console.warn("All fields are required");
-          toast.error("Slug must be unique");
-        } else if (error.status === 404) {
-          console.warn("Course does not exist");
-          toast.error("Course does not exist");
-        } else if (error.status === 500) {
-          console.error("Internal server error");
-          toast.error("Internal server error. Please try again later.");
-        } else {
-          console.error("Unexpected status code:", error.status);
-          // toast.error("Unexpected error occurred. Please try again.");
-        }
-        console.error("Error adding Manager:", error);
-        // toast.error("Failed to add the class. Please try again.");
+        console.error("Error adding Course:", error);
+        // ... (your existing error handling for axiosSecure)
+      } finally {
+        setIsSubmitting(false);
       }
-      // toast.error("Failed to add the class. Please try again.");
     },
   });
 
@@ -283,40 +291,70 @@ const ProductCreateForm = ({ refetch, onClose }) => {
       </components.DropdownIndicator>
     );
   };
-  const [selectedTeacher, setSelectedTeacher] = useState([]);
+
   return (
     <form onSubmit={formik.handleSubmit}>
       <div className=" space-y-4   backdrop: mt-0">
+        <div className="">
+          <div className="relative w-fit">
+            <Label className="block">
+              Product Category<span className="text-xl text-red-500">*</span>
+            </Label>
+          </div>
+          <Select
+            // isMulti prop is removed for single select
+            className="custom-select w-full rounded-sm bg-[#FBFDFC] border border-[#E6E6E6] "
+            components={{ DropdownIndicator }}
+            options={categoryOptions}
+            placeholder="Select Category"
+            styles={customStyles}
+            // Adjust value to expect a single object
+            value={categoryOptions.find((option) =>
+              option.value === selectedCategory // Compare directly with the single selected value
+            )}
+            onChange={(selectedOption) => { // selectedOption will be a single object or null
+              const selectedValue = selectedOption ? selectedOption.value : null;
+
+              setSelectedCategory(selectedValue); // Update local state with single value
+              formik.setFieldValue("categoryId", selectedValue); // Update Formik with single value
+            }}
+          />
+          {formik.touched.teachers && formik.errors.teachers && (
+            <small className="text-red-500 text-sm">
+              {formik.errors.teachers}
+            </small>
+          )}
+        </div>
         <div className="flex items-center flex-col md:flex-row gap-2">
           {/* Slug */}
           <div className="w-full flex-1 ">
-            <Label htmlFor="slug" className="block">
-              Slug <span className="text-xl text-red-500 ">*</span>
+            <Label htmlFor="code" className="block">
+              Product  Code<span className="text-xl text-red-500 ">*</span>
             </Label>
             <Input
-              id="slug"
-              name="slug"
+              id="code"
+              name="code"
               type="text"
-              placeholder="Enter Slug"
+              placeholder="Enter Product Code"
               className="w-full"
-              value={formik.values.slug}
+              value={formik.values.code}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
             />
-            {formik.touched.slug && formik.errors.slug && (
-              <p className="text-red-500 text-sm mt-1">{formik.errors.slug}</p>
+            {formik.touched.code && formik.errors.code && (
+              <p className="text-red-500 text-sm mt-1">{formik.errors.code}</p>
             )}
           </div>
           {/* Course Name */}
           <div className="w-full flex-1">
             <Label htmlFor="name" className="block">
-              Course Name <span className="text-xl text-red-500 ">*</span>
+              Product Name <span className="text-xl text-red-500 ">*</span>
             </Label>
             <Input
               id="name"
               name="name"
               type="text"
-              placeholder="Enter Course Name"
+              placeholder="Enter Product Name"
               className="w-full"
               value={formik.values.name}
               onChange={formik.handleChange}
@@ -330,56 +368,39 @@ const ProductCreateForm = ({ refetch, onClose }) => {
         {/* Course Description */}
         <div className="">
           <Label htmlFor="description" className="block">
-            Course Description
+            Product Description
           </Label>
           <Textarea
             id="description"
             name="description"
-            placeholder="Enter your course description..."
+            placeholder="Enter your product description..."
             className="w-full mt-1"
             value={formik.values.description}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
           />
         </div>
-        {/* Assign Teachers */}{" "}
         <div className="">
-          <div className="relative w-fit">
-            <Label className="block">
-              Assign Teacher <span className="text-xl text-red-500">*</span>
-            </Label>
-          </div>
-          <Select
-            isMulti
-            className="custom-select w-full rounded-sm bg-[#FBFDFC] border border-[#E6E6E6] "
-            components={{ DropdownIndicator }}
-            options={teacherOptions}
-            placeholder="Select Teacher"
-            styles={customStyles}
-            value={teacherOptions.filter((option) =>
-              selectedTeacher.includes(option.value)
-            )}
-            onChange={(selectedOptions) => {
-              const selectedValues = selectedOptions
-                ? selectedOptions.map((option) => option.value)
-                : [];
-              // Update local state
-
-              setSelectedTeacher(selectedValues); // Update local state
-              formik.setFieldValue("teachers", selectedValues); // Update Formik
-            }}
+          <Label htmlFor="shortDescription" className="block">
+            Product Short Description
+          </Label>
+          <Textarea
+            id="shortDescription"
+            name="shortDescription"
+            placeholder="Enter your product short description..."
+            className="w-full mt-1"
+            value={formik.values.shortDescription}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
           />
-          {formik.touched.teachers && formik.errors.teachers && (
-            <small className="text-red-500 text-sm">
-              {formik.errors.teachers}
-            </small>
-          )}
         </div>
+
+
         <div className="flex items-center flex-col md:flex-row gap-2">
           {/* Course Price */}
           <div className="w-full flex-1">
             <Label htmlFor="price" className="block">
-              Course Price <span className="text-xl text-red-500 ">*</span>
+              Product Price <span className="text-xl text-red-500 ">*</span>
             </Label>
             <Input
               id="price"
@@ -433,11 +454,11 @@ const ProductCreateForm = ({ refetch, onClose }) => {
           {/* Approximate class and duration */}
           <div className="flex-1 w-full">
             <Label htmlFor="approximate_class" className="block">
-              Approximate Class
+              Total Quantity
             </Label>
             <Input
-              id="approximate_class"
-              name="approximate_class"
+              id="quantity"
+              name="quantity"
               type="text"
               placeholder="15"
               className="w-full mt-2"
@@ -452,80 +473,46 @@ const ProductCreateForm = ({ refetch, onClose }) => {
               }}
             />
           </div>
-          {/* Approximate duration */}
-          <div className="flex-1 w-full">
-            <Label htmlFor="approximate_duration" className="block">
-              Approximate Duration
-            </Label>
-            <Input
-              id="approximate_duration"
-              name="approximate_duration"
-              type="text"
-              placeholder="2 month"
-              className="w-full mt-2"
-              value={formik.values.approximate_duration}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              onKeyPress={(e) => {
-                const invalidChars = ["-", "e", "+"];
-                if (invalidChars.includes(e.key)) {
-                  e.preventDefault();
-                }
-              }}
-            />
-          </div>
-        </div>
-        <div className="flex items-center flex-col md:flex-row gap-2">
-          {/* Approximate exams */}
-          <div className="flex-1 w-full">
-            <Label htmlFor="approximate_exams" className="block">
-              Approximate Exams
-            </Label>
-            <Input
-              id="approximate_exams"
-              name="approximate_exams"
-              type="text"
-              placeholder="20 "
-              className="w-full mt-2"
-              value={formik.values.approximate_exams}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              onKeyPress={(e) => {
-                const invalidChars = ["-", "e", "+"];
-                if (invalidChars.includes(e.key)) {
-                  e.preventDefault();
-                }
-              }}
-            />
-          </div>
 
-          {/* abailable book */}
-          <div className="space-y-3 flex-1 ">
-            <Label htmlFor="books_inc" className="block">
-              Is Books Included
-            </Label>
-            <div className="flex items-center space-x-4">
-              {bookOptions?.map((option) => (
-                <label
-                  key={option.value}
-                  className="flex items-center space-x-2  cursor-pointer"
-                >
-                  <input
-                    type="radio"
-                    name="books_inc"
-                    value={option?.value}
-                    checked={formik.values.books_inc === option.value}
-                    onChange={() =>
-                      formik.setFieldValue("books_inc", option.value)
-                    }
-                    className="w-5 h-5"
-                  />
-                  <span className="text-sm">{option.label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
         </div>
+
+
+
+        <div className="">
+          <div className="relative w-fit">
+            <Label className="block">
+              Product   Availble Color<span className="text-xl text-red-500">*</span>
+            </Label>
+          </div>
+          <Select
+            isMulti
+            className="custom-select w-full rounded-sm bg-[#FBFDFC] border border-[#E6E6E6] "
+            components={{ DropdownIndicator }}
+            options={productColor}
+            placeholder="Select Color"
+            styles={customStyles}
+            value={productColor.filter((option) =>
+              selectedColor.includes(option.value)
+            )}
+            onChange={(selectedOptions) => {
+              const selectedValues = selectedOptions
+                ? selectedOptions.map((option) => option.value)
+                : [];
+              // Update local state
+
+              setSelectedColor(selectedValues); // Update local state
+              formik.setFieldValue("colorNames", selectedValues); // Update Formik
+            }}
+          />
+          {formik.touched.teachers && formik.errors.teachers && (
+            <small className="text-red-500 text-sm">
+              {formik.errors.teachers}
+            </small>
+          )}
+        </div>
+
+
+
         {/* Featured Image URL */}
         <div className=" ">
           <Label htmlFor="thumbnail" className="block">
@@ -619,71 +606,10 @@ const ProductCreateForm = ({ refetch, onClose }) => {
           ) : null}
         </div>
         {/* promo */}
-        <div className="space-y-2 mt-3 ">
-          <Label htmlFor="video" className="block">
-            Promo Video
-          </Label>
-          <Input
-            id="video"
-            name="video"
-            type="text"
-            placeholder="Url"
-            className="w-full"
-            value={formik.values.video}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-          />
-          {formik.touched.video && formik.errors.video && (
-            <p className="text-red-500 text-sm mt-1">{formik.errors.video}</p>
-          )}
-        </div>
-        {/* Facebook Group Link */}
-        <div className="space-y-2 mt-3">
-          <Label htmlFor="hasFb" className="block">
-            Has Facebook
-          </Label>
-          <div className="flex items-center space-x-4">
-            {options.map((option) => (
-              <label
-                key={option.value}
-                className="flex items-center space-x-2  cursor-pointer"
-              >
-                <input
-                  type="radio"
-                  name="hasFb"
-                  value={option.value}
-                  checked={formik.values.hasFb === option.value}
-                  onChange={() => formik.setFieldValue("hasFb", option.value)} // Update Formik's state directly
-                  className="w-5 h-5"
-                />
-                <span className="text-sm">{option.label}</span>
-              </label>
-            ))}
-          </div>
-          {formik.touched.hasFb && !formik.values.hasFb && (
-            <p className="text-red-500 text-sm mt-1">Please select an option</p>
-          )}
-        </div>
-        {/* Facebook Group Link Input */}
-        {formik.values.hasFb === "yes" && (
-          <div className="space-y-2 mt-3">
-            <Label htmlFor="fbgrouplink" className="block">
-              Group Link<span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="fbgrouplink"
-              name="fbgrouplink"
-              type="text"
-              placeholder="Url"
-              {...formik.getFieldProps("fbgrouplink")}
-            />
-            {formik.touched.fbgrouplink && formik.errors.fbgrouplink && (
-              <p className="text-red-500 text-sm">
-                {formik.errors.fbgrouplink}
-              </p>
-            )}
-          </div>
-        )}
+
+
+
+
         {/* Submit Button */}
         <div className="flex justify-end space-x-2">
           <Button

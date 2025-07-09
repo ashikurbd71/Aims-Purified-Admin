@@ -22,15 +22,14 @@ import { createBrowserRouter } from "react-router-dom";
 import { PrivateRoutes, SignedInProtectedRoutes } from "./ProtectedRoutes";
 
 
-import NoticeManagement from "@/pages/dashboard/notice/NoticeManagement";
+
 import TeamManage from "@/pages/dashboard/team/TeamManage";
 
-import CourseDetails from "@/pages/dashboard/course/components/CourseDetails";
 import AdmissionForm from "@/pages/dashboard/components/forms/admission/AdmissionForm";
 import AdmissionUpdate from "@/pages/dashboard/components/update/forms/admission/AdmissionUpdate";
 
 import MemberDetails from "@/pages/dashboard/team/components/MemberDetails";
-import ClassDetails from "@/pages/dashboard/course/class/components/ClassDetails";
+
 
 import Profile from "@/pages/dashboard/team/components/Profile";
 
@@ -102,14 +101,7 @@ const Router = createBrowserRouter([
       },
 
 
-      {
-        path: "/notice",
-        element: (
-          <PrivateRoutes>
-            <NoticeManagement />
-          </PrivateRoutes>
-        ),
-      },
+
       {
         path: "/team",
         element: (
@@ -128,23 +120,8 @@ const Router = createBrowserRouter([
         ),
       },
       // course details
-      {
-        path: "/course/:courseId",
-        element: (
-          <PrivateRoutes>
-            <CourseDetails />
-          </PrivateRoutes>
-        ),
-      },
-      // class details
-      {
-        path: "/class-details/:id",
-        element: (
-          <PrivateRoutes>
-            <ClassDetails />
-          </PrivateRoutes>
-        ),
-      },
+
+
       {
         path: "/subject-chapter/:id",
         element: (

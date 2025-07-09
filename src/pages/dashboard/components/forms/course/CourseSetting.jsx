@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { FileUp, X } from "lucide-react";
-import { getCourse, getTeacher } from "@/Api/selectorApi";
+import { getCategory } from "@/Api/selectorApi";
 import { useQuery } from "@tanstack/react-query";
 import useAxiosSecure from "@/hooks/useAxiosSecure";
 import { useNavigate, useParams } from "react-router-dom";
@@ -79,7 +79,7 @@ const CourseForm = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = await getTeacher();
+        const data = await getCategory();
         // Transform API response to match Select component format
         const options = data?.data?.map((teachers) => ({
           value: teachers._id, // Backend's teacher ID

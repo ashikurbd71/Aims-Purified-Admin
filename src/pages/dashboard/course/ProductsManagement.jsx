@@ -317,11 +317,7 @@ const ProductsManagement = () => {
               )}
             </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
-              <DialogHeader>
-                <DialogTitle className="text-xl font-bold">
-                  Create New Course
-                </DialogTitle>
-              </DialogHeader>
+
               <ProductCreateForm
                 refetch={courseDataRefetch}
                 onClose={handleModalClose}

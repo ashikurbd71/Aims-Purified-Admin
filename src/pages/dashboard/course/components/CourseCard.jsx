@@ -30,7 +30,7 @@ import {
 import { TooltipProvider } from "@/components/ui/tooltip"
 
 import useAxiosSecure from "@/hooks/useAxiosSecure"
-import UploadClass from "../../components/forms/class/UploadClass"
+
 import User from "@/hooks/userData"
 import PropTypes from "prop-types"
 
