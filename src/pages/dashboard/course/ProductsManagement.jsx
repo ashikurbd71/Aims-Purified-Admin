@@ -70,7 +70,7 @@ const ProductsManagement = () => {
     const filtered = courseData.filter(
       (course) =>
         course.name?.toLowerCase().includes(query) ||
-        course.metadata?.description?.toLowerCase().includes(query)
+        course?.description?.toLowerCase().includes(query)
     );
 
     setFilteredCourses(filtered);
@@ -117,10 +117,10 @@ const ProductsManagement = () => {
     return {
       total: courseData.length,
       active: courseData.filter(
-        (course) => !course.metadata.isEnrollmentDisabled
+        (course) => !course.status || course.status === "active"
       ).length,
       draft: courseData.filter(
-        (course) => course.metadata.isEnrollmentDisabled
+        (course) => course.status === "draft"
       ).length,
     };
   };

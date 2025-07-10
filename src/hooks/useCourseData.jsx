@@ -4,9 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 const useCourseData = () => {
   const axiosSecure = useAxiosSecure();
   const { data: courseData = [], refetch: courseRefetch } = useQuery({
-    queryKey: ["courseManagement"],
+    queryKey: ["productManagement"],
     queryFn: async () => {
-      const res = await axiosSecure.get(`/course`);
+      const res = await axiosSecure.get(`/products`);
       return res.data.data;
     },
     staleTime: Infinity,

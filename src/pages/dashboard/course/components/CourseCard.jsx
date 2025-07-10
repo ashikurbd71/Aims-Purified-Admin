@@ -88,24 +88,24 @@ const CourseCard = ({ course, refetch, viewMode = "grid" }) => {
       <>
         {course?.map((item) => (
           <Card
-            key={item._id}
+            key={item.id}
             className="overflow-hidden group transition-all duration-300 hover:shadow-lg border border-gray-200 hover:border-purple-200 bg-white"
           >
             <div className="relative">
               <img
-                src={item?.metadata?.featuredImage || "/placeholder.svg?height=200&width=400"}
+                src={item?.featuredImage || "/placeholder.svg?height=200&width=400"}
                 alt={item?.name || "Course Image"}
                 className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105"
               />
               <div className="absolute top-3 right-3 flex gap-2">
                 <Badge variant="secondary" className="bg-white/90 text-purple-700 shadow-sm">
-                  {!item?.metadata?.isEnrollmentDisabled === true ? "Active" : "Disabled"}
+                  {!item?.status === true ? "Active" : "Disabled"}
                 </Badge>
               </div>
             </div>
 
             <CardContent className="p-5">
-              <Link to={`/course/${item?._id}`} className="block group-hover:text-purple-700 transition-colors">
+              <Link to={`/course/${item?.id}`} className="block group-hover:text-purple-700 transition-colors">
                 <h2 className="text-xl font-bold line-clamp-1">{item?.name}</h2>
               </Link>
 
@@ -117,12 +117,12 @@ const CourseCard = ({ course, refetch, viewMode = "grid" }) => {
               </div>
 
               <p className="text-gray-600 mt-3 line-clamp-2">
-                {item?.metadata?.description || "No description available"}
+                {item?.shortDescription || "No description available"}
               </p>
             </CardContent>
 
             <CardFooter className="px-5 py-4 bg-gray-50 flex justify-between items-center">
-              <Link to={`/course/${item?._id}`}>
+              <Link to={`/course/${item?.id}`}>
                 <Button variant="outline" size="sm" className="text-purple-700 border-purple-200 hover:bg-purple-50">
                   <Eye className="h-4 w-4 mr-1" />
                   View
@@ -130,62 +130,41 @@ const CourseCard = ({ course, refetch, viewMode = "grid" }) => {
               </Link>
 
               <div className="flex gap-2">
-                {/* Upload Class Button */}
-                <Dialog
-                  open={isModalOpen === item?._id}
-                  onOpenChange={(open) => {
-                    if (open) {
-                      handleModalOpen(item?._id)
-                    } else {
-                      handleModalClose()
-                    }
-                  }}
-                >
-                  <DialogTrigger asChild>
-                    <Button size="sm" className="bg-purple-700 hover:bg-purple-800">
-                      <Upload className="h-4 w-4 mr-1" />
-                      Upload Class
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-h-screen overflow-auto min-w-[45%]">
-                    <UploadClass courseId={item?._id} onClose={handleModalClose} />
-                  </DialogContent>
-                </Dialog>
 
                 {/* Delete Course Button */}
-                {["ADMIN", "DEVELOPER"].includes(userData?.role) && (
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="border-red-200 text-red-600 hover:bg-red-50"
+
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-red-200 text-red-600 hover:bg-red-50"
+                      disabled={isDeleting}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. It will permanently delete this course and remove its data from
+                        your servers.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => handleDelete(item?._id)}
                         disabled={isDeleting}
+                        className="bg-red-600 hover:bg-red-700"
                       >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action cannot be undone. It will permanently delete this course and remove its data from
-                          your servers.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDelete(item?._id)}
-                          disabled={isDeleting}
-                          className="bg-red-600 hover:bg-red-700"
-                        >
-                          {isDeleting ? "Deleting..." : "Yes, Delete it!"}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                )}
+                        {isDeleting ? "Deleting..." : "Yes, Delete it!"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+
               </div>
             </CardFooter>
           </Card>
@@ -246,10 +225,7 @@ const CourseCard = ({ course, refetch, viewMode = "grid" }) => {
                         </Link>
                       </DropdownMenuItem>
 
-                      <DropdownMenuItem onClick={() => handleModalOpen(item?._id)}>
-                        <Upload className="h-4 w-4 mr-2" />
-                        Upload Class
-                      </DropdownMenuItem>
+
 
                       <DropdownMenuSeparator />
 
@@ -284,62 +260,43 @@ const CourseCard = ({ course, refetch, viewMode = "grid" }) => {
                   </Button>
                 </Link>
 
-                <Dialog
-                  open={isModalOpen === item?._id}
-                  onOpenChange={(open) => {
-                    if (open) {
-                      handleModalOpen(item?._id)
-                    } else {
-                      handleModalClose()
-                    }
-                  }}
-                >
-                  <DialogTrigger asChild>
-                    <Button size="sm" className="bg-purple-700 hover:bg-purple-800">
-                      <Upload className="h-4 w-4 mr-1" />
-                      Upload Class
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-h-screen overflow-auto min-w-[45%]">
-                    <UploadClass courseId={item?._id} onClose={handleModalClose} />
-                  </DialogContent>
-                </Dialog>
+
 
                 {/* Hidden trigger for delete dialog */}
-                {["ADMIN", "DEVELOPER"].includes(userData?.role) && (
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        id={`delete-dialog-${item._id}`}
-                        size="sm"
-                        variant="outline"
-                        className="border-red-200 text-red-600 hover:bg-red-50"
+
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      id={`delete-dialog-${item._id}`}
+                      size="sm"
+                      variant="outline"
+                      className="border-red-200 text-red-600 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. It will permanently delete this course and remove its data from
+                        your servers.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => handleDelete(item?._id)}
+                        disabled={isDeleting}
+                        className="bg-red-600 hover:bg-red-700"
                       >
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        Delete
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action cannot be undone. It will permanently delete this course and remove its data from
-                          your servers.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDelete(item?._id)}
-                          disabled={isDeleting}
-                          className="bg-red-600 hover:bg-red-700"
-                        >
-                          {isDeleting ? "Deleting..." : "Yes, Delete it!"}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                )}
+                        {isDeleting ? "Deleting..." : "Yes, Delete it!"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+
               </div>
             </div>
           </div>
