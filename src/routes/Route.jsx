@@ -79,21 +79,22 @@ const Router = createBrowserRouter([
     ),
     // errorElement: <NotFoundPage />,
     children: [
+      // {
+      //   /**
+      //    * Child Route - Dashboard Home
+      //    *
+      //    * The default child of the dashboard route, rendering the `DashboardHome` component.
+      //    */
+      //   path: "/",
+      //   element: (
+      //     <PrivateRoutes>
+      //       <DashboardHome />
+      //     </PrivateRoutes>
+      //   ),
+      // },
+      // handleNavigateAndFullReload
       {
-        /**
-         * Child Route - Dashboard Home
-         *
-         * The default child of the dashboard route, rendering the `DashboardHome` component.
-         */
         path: "/",
-        element: (
-          <PrivateRoutes>
-            <DashboardHome />
-          </PrivateRoutes>
-        ),
-      },
-      {
-        path: "/products-management",
         element: (
 
           <ProductsManagement />

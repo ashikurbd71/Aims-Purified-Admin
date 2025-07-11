@@ -9,21 +9,23 @@ import Select, { components } from "react-select";
 import { Button } from "@/components/ui/button";
 import useAxiosSecure from "@/hooks/useAxiosSecure";
 import { toast } from "sonner";
-import axios from "axios"; // Assuming you have a direct axios instance for file uploads if needed
+import axios from "axios";
 import ButtonLoader from "@/components/global/ButtonLoader";
 import { getCategory } from "@/Api/selectorApi";
-import { useNavigate, useParams } from "react-router-dom"; // To get productId from URL
-import { useQuery } from "@tanstack/react-query"; // For fetching product data
+import { useNavigate, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 
-const ProductSettingForm = ({ refetch, onClose }) => {
+const ProductSetting = ({ onClose }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [selectedColors, setSelectedColors] = useState([]);
-
+  // IMPORTANT: Replace with your actual ImgBB API key
+  const IMGBB_API_KEY = "90087a428cac94ac2e8021a26aeb9f9e";
   const axiosSecure = useAxiosSecure();
-  const { id } = useParams(); // Get the product ID from the URL
-  console.log(id)
+  const { id } = useParams();
+  const navigate = useNavigate();
+
   // Options for product colors
   const productColorOptions = [
     { value: "red", label: "Red" },
@@ -39,15 +41,11 @@ const ProductSettingForm = ({ refetch, onClose }) => {
     { value: "grey", label: "Grey" },
   ];
 
-
-
   const statusOptions = [
-
     { value: 'active', label: 'Active' },
     { value: 'inactive', label: 'Inactive' },
     { value: 'out_of_stock', label: 'Out Of Stock' },
-  ]
-
+  ];
 
   const [categoryOptions, setCategoryOptions] = useState([]);
 
@@ -72,10 +70,10 @@ const ProductSettingForm = ({ refetch, onClose }) => {
   }, []);
 
   // Fetch existing product data using useQuery
-  const { data: product, isLoading, error } = useQuery({
-    queryKey: ["productData", id], // Include productId in queryKey
+  const { data: product, isLoading, error, refetch } = useQuery({
+    queryKey: ["productData", id],
     queryFn: async () => {
-      if (!id) return null; // Prevent fetching if productId is not available
+      if (!id) return null;
       try {
         const response = await axiosSecure.get(`/products/${id}`); // Adjust API endpoint
         return response?.data?.data;
@@ -88,14 +86,15 @@ const ProductSettingForm = ({ refetch, onClose }) => {
     enabled: !!id, // Only run query if productId exists
   });
 
-  console.log(product)
 
-  // --- Formik Setup ---
-
-
-  const navigate = useNavigate();
-
-
+  const handleNavigateAndFullReload = () => {
+    if (typeof window !== 'undefined') {
+      // This will navigate to /products-management AND cause a full page reload
+      window.location.href = "/";
+    } else {
+      console.warn("window object not available for navigation.");
+    }
+  };
   const formik = useFormik({
     initialValues: {
       categoryId: null,
@@ -107,12 +106,11 @@ const ProductSettingForm = ({ refetch, onClose }) => {
       discount: "",
       totalQuantity: "",
       productColor: [],
-      // These are for handling new file uploads (will be File objects)
-      newThumbnailImage: null,
-      newImages: [],
-      // These are for holding existing image URLs from the fetched product
-      existingThumbnailImage: "",
-      existingImages: [],
+      status: "active", // Default status
+      newThumbnailImage: null, // File object for new thumbnail
+      newImages: [], // Array of File objects for new additional images
+      existingThumbnailImage: "", // URL for existing thumbnail
+      existingImages: [], // Array of URLs for existing additional images
     },
     validationSchema: Yup.object({
       categoryId: Yup.string().required("Product Category is required"),
@@ -124,7 +122,7 @@ const ProductSettingForm = ({ refetch, onClose }) => {
         .required("Product Price is required")
         .min(0, "Price cannot be less than 0"),
       discount: Yup.number()
-        .optional() // Use optional instead of notRequired for numbers/dates
+        .optional()
         .test(
           "is-valid-discount",
           "Discount cannot be greater than the price",
@@ -138,6 +136,8 @@ const ProductSettingForm = ({ refetch, onClose }) => {
         .min(0, "Quantity cannot be less than 0")
         .integer("Quantity must be an integer"),
       productColor: Yup.array().min(1, "At least one color is required"),
+      status: Yup.string().required("Product Status is required"),
+
 
       newImages: Yup.array().of(
         Yup.mixed()
@@ -147,37 +147,40 @@ const ProductSettingForm = ({ refetch, onClose }) => {
           .test("fileType", "Unsupported file format for image", (value) => {
             return value && ['image/jpeg', 'image/png', 'image/svg+xml'].includes(value.type);
           })
-      ).notRequired(), // Optional for additional images
+      ).notRequired(),
     }),
 
     onSubmit: async (values) => {
       setIsSubmitting(true);
-      toast.loading("Updating product...");
+      toast.loading("Updating product...", { id: 'product-update' }); // Add an ID to dismiss specifically
 
       try {
-        // Generic Image Upload Function (replace with your actual API)
+        // Generic Image Upload Function for ImgBB
         const uploadImage = async (file) => {
           const formData = new FormData();
-          formData.append("file", file); // Adjust 'file' to match your backend's expected field name
+          formData.append("image", file); // Correct field name for ImgBB
+
           try {
-            // Use your actual image upload endpoint and API key if required
             const response = await axios.post(
-              "https://api.example.com/v1/upload/images", // Replace with your image upload API endpoint
+              `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,
               formData,
               {
                 headers: { "Content-Type": "multipart/form-data" },
               }
             );
-            // Assuming your upload API returns a URL in response.data.url or similar
-            if ((response?.status === 200 || response?.status === 201) && response?.data?.url) {
-              return response.data.url;
+
+            // Correct response path for ImgBB
+            if ((response?.status === 200 || response?.status === 201) && response?.data?.data?.url) {
+              return response.data.data.url;
             } else {
-              console.error("Image upload failed: Invalid response", response);
+              console.error("Image upload failed: Invalid response from ImgBB", response);
               return null;
             }
           } catch (uploadError) {
-            console.error("Error uploading image:", uploadError);
-            toast.error(`Image upload failed: ${uploadError.message}`);
+            console.error("Error uploading image to ImgBB:", uploadError);
+            // Provide more specific error message from ImgBB if available
+            const imgbbErrorMessage = uploadError.response?.data?.error?.message || uploadError.message;
+            toast.error(`Image upload failed: ${imgbbErrorMessage}`, { id: 'product-update' });
             return null;
           }
         };
@@ -189,11 +192,20 @@ const ProductSettingForm = ({ refetch, onClose }) => {
           if (uploadedUrl) {
             finalThumbnailUrl = uploadedUrl;
           } else {
-            toast.error("Failed to upload new thumbnail image.");
-            setIsSubmitting(false);
-            toast.dismiss();
-            return;
+            // If new thumbnail fails and no existing one, stop submission
+            if (!values.existingThumbnailImage) {
+              toast.error("Thumbnail image upload failed. Please try again.", { id: 'product-update' });
+              setIsSubmitting(false);
+              return;
+            }
+            toast.warning("New thumbnail image upload failed. Keeping existing if available.", { id: 'product-update' });
           }
+        } else if (!values.existingThumbnailImage) {
+          // If no new thumbnail and no existing one, this case should ideally be caught by Yup validation,
+          // but as a fallback for submission:
+          toast.error("A thumbnail image is required.", { id: 'product-update' });
+          setIsSubmitting(false);
+          return;
         }
 
         // Handle Additional images upload
@@ -204,7 +216,7 @@ const ProductSettingForm = ({ refetch, onClose }) => {
           const validNewUrls = newUploadedUrls.filter(url => url !== null);
           finalImageUrls = [...finalImageUrls, ...validNewUrls]; // Combine
           if (validNewUrls.length !== values.newImages.length) {
-            toast.warning("Some additional images failed to upload.");
+            toast.warning("Some additional images failed to upload.", { id: 'product-update' });
           }
         }
 
@@ -221,29 +233,27 @@ const ProductSettingForm = ({ refetch, onClose }) => {
           productColor: values.productColor,
           thumbnailImage: finalThumbnailUrl, // Use the resolved URL
           images: finalImageUrls, // Use the combined image URLs
-          status: values.status, // Default to 'active' if not set
+          status: values.status,
         };
 
         // Send Data to Backend for update (PATCH request for existing resource)
-        const response = await axiosSecure.patch(`/products/${id}`, productData); // Adjust API endpoint and method
+        const response = await axiosSecure.patch(`/products/${id}`, productData);
 
-        if (response.status === 200) { // Typically 200 for successful PATCH/PUT
-          toast.success("Product updated successfully!");
-          // Consider re-fetching product data in the parent component or via a global state management
-          if (refetch) refetch();
-          if (onClose) onClose();
+        if (response.status === 200) {
+          toast.success("Product updated successfully!", { id: 'product-update' });
+          refetch();
+          handleNavigateAndFullReload(); // Force reload to reflect changes
 
-          navigate("/products-management");
         } else {
-          toast.error("Something went wrong. Please try again.");
+          toast.error("Something went wrong. Please try again.", { id: 'product-update' });
         }
       } catch (error) {
         console.error("Error updating product:", error);
         const errorMessage = error.response?.data?.message || error.message || "Failed to update product.";
-        toast.error(errorMessage);
+        toast.error(errorMessage, { id: 'product-update' });
       } finally {
         setIsSubmitting(false);
-        toast.dismiss();
+        toast.dismiss('product-update'); // Dismiss specific toast
       }
     },
   });
@@ -263,10 +273,11 @@ const ProductSettingForm = ({ refetch, onClose }) => {
       );
       setSelectedColors(preSelectedColors);
 
-      const preSelectedstatus = statusOptions.filter((option) =>
-        product.status.includes(option.value)
+      // Set selected status for React-Select
+      const preSelectedStatus = statusOptions.find((option) =>
+        option.value === product.status
       );
-      setSelectedStatus(preSelectedstatus);
+      setSelectedStatus(preSelectedStatus);
 
       formik.setValues({
         categoryId: product.categoryId || null,
@@ -275,19 +286,17 @@ const ProductSettingForm = ({ refetch, onClose }) => {
         description: product.description || "",
         shortDescription: product.shortDescription || "",
         price: product.price || "",
-        discount: product.discountedPrice || "", // Use discountedPrice from fetched data
+        discount: product.discountedPrice || "",
         totalQuantity: product.totalQuantity || "",
         productColor: product.productColor || [],
-        // Existing image URLs (from fetched product data)
         existingThumbnailImage: product.thumbnailImage || "",
         existingImages: product.images || [],
-        // New file inputs are null initially
-        status: product.status, // Default to 'active' if not set
+        status: product.status || 'active',
         newThumbnailImage: null,
         newImages: [],
       });
     }
-  }, [product, categoryOptions]); // Dependencies for useEffect
+  }, [product, categoryOptions, id]); // Added id to dependencies
 
   // --- Image Handling Functions (for previews and removal) ---
 
@@ -298,16 +307,19 @@ const ProductSettingForm = ({ refetch, onClose }) => {
       // Clear existing thumbnail when a new one is selected
       formik.setFieldValue("existingThumbnailImage", "");
     }
+    formik.setFieldTouched('newThumbnailImage', true, false); // Mark as touched on change
   };
 
   const handleRemoveExistingThumbnail = () => {
     formik.setFieldValue("existingThumbnailImage", "");
-    formik.setFieldValue("newThumbnailImage", null); // Clear new thumbnail if any
+    formik.setFieldValue("newThumbnailImage", null);
+    formik.setFieldTouched('newThumbnailImage', true, false); // Mark as touched to trigger validation
   };
 
   const handleNewImagesChange = (event) => {
     const files = Array.from(event.currentTarget.files);
     formik.setFieldValue("newImages", files);
+    formik.setFieldTouched('newImages', true, false); // Mark as touched on change
   };
 
   const handleRemoveExistingImage = (indexToRemove) => {
@@ -322,6 +334,7 @@ const ProductSettingForm = ({ refetch, onClose }) => {
       (_, index) => index !== indexToRemove
     );
     formik.setFieldValue("newImages", updatedNewImages);
+    formik.setFieldTouched('newImages', true, false); // Mark as touched to trigger validation
   };
 
   // --- React-Select Custom Styles and Indicator ---
@@ -330,15 +343,19 @@ const ProductSettingForm = ({ refetch, onClose }) => {
       ...provided,
       border: "1px solid #E6E6E6",
       backgroundColor: "#FFFFFF",
-      minHeight: '38px', // Ensure consistent height
+      minHeight: '38px',
+      boxShadow: 'none', // Remove default focus shadow
+      '&:hover': {
+        borderColor: '#9ca3af', // Light grey on hover
+      }
     }),
     multiValue: (provided) => ({
       ...provided,
-      backgroundColor: '#e0e7ff', // Light blue background for selected items
+      backgroundColor: '#e0e7ff',
     }),
     multiValueLabel: (provided) => ({
       ...provided,
-      color: '#4338ca', // Darker text for selected items
+      color: '#4338ca',
     }),
     multiValueRemove: (provided) => ({
       ...provided,
@@ -346,6 +363,14 @@ const ProductSettingForm = ({ refetch, onClose }) => {
       ':hover': {
         backgroundColor: '#c7d2fe',
         color: 'red',
+      },
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? '#4338ca' : state.isFocused ? '#e0e7ff' : null,
+      color: state.isSelected ? 'white' : 'black',
+      ':active': {
+        backgroundColor: '#c7d2fe',
       },
     }),
   };
@@ -379,15 +404,18 @@ const ProductSettingForm = ({ refetch, onClose }) => {
     return <div className="text-center py-10 text-gray-500">Product not found or invalid ID.</div>;
   }
 
+
+
   return (
     <form onSubmit={formik.handleSubmit}>
-      <div className="space-y-4 backdrop: mt-0">
+      <div className="space-y-4 mt-0">
         {/* Product Category */}
         <div>
-          <Label className="block">
+          <Label htmlFor="categoryId" className="block">
             Product Category<span className="text-xl text-red-500">*</span>
           </Label>
           <Select
+            id="categoryId"
             className="custom-select w-full rounded-sm bg-[#FBFDFC] border border-[#E6E6E6]"
             components={{ DropdownIndicator }}
             options={categoryOptions}
@@ -396,7 +424,7 @@ const ProductSettingForm = ({ refetch, onClose }) => {
             value={selectedCategory}
             onChange={(selectedOption) => {
               const selectedValue = selectedOption ? selectedOption.value : null;
-              setSelectedCategory(selectedOption); // Store the full option for display
+              setSelectedCategory(selectedOption);
               formik.setFieldValue("categoryId", selectedValue);
             }}
             onBlur={() => formik.setFieldTouched('categoryId', true)}
@@ -564,10 +592,11 @@ const ProductSettingForm = ({ refetch, onClose }) => {
 
         {/* Product Available Color */}
         <div>
-          <Label className="block">
+          <Label htmlFor="productColor" className="block">
             Product Available Color<span className="text-xl text-red-500">*</span>
           </Label>
           <Select
+            id="productColor"
             isMulti
             className="custom-select w-full rounded-sm bg-[#FBFDFC] border border-[#E6E6E6]"
             components={{ DropdownIndicator }}
@@ -579,7 +608,7 @@ const ProductSettingForm = ({ refetch, onClose }) => {
               const selectedValues = selectedOptions
                 ? selectedOptions.map((option) => option.value)
                 : [];
-              setSelectedColors(selectedOptions); // Store full options for display
+              setSelectedColors(selectedOptions);
               formik.setFieldValue("productColor", selectedValues);
             }}
             onBlur={() => formik.setFieldTouched('productColor', true)}
@@ -591,11 +620,13 @@ const ProductSettingForm = ({ refetch, onClose }) => {
           )}
         </div>
 
+        {/* Product Status */}
         <div>
-          <Label className="block">
-            Product Status
+          <Label htmlFor="status" className="block">
+            Product Status<span className="text-xl text-red-500">*</span>
           </Label>
           <Select
+            id="status"
             className="custom-select w-full rounded-sm bg-[#FBFDFC] border border-[#E6E6E6]"
             components={{ DropdownIndicator }}
             options={statusOptions}
@@ -604,12 +635,16 @@ const ProductSettingForm = ({ refetch, onClose }) => {
             value={selectedStatus}
             onChange={(selectedOption) => {
               const selectedValue = selectedOption ? selectedOption.value : null;
-              setSelectedStatus(selectedOption); // Store the full option for display
+              setSelectedStatus(selectedOption);
               formik.setFieldValue("status", selectedValue);
             }}
             onBlur={() => formik.setFieldTouched('status', true)}
           />
-
+          {formik.touched.status && formik.errors.status && (
+            <small className="text-red-500 text-sm">
+              {formik.errors.status}
+            </small>
+          )}
         </div>
 
         {/* Thumbnail Upload */}
@@ -749,9 +784,9 @@ const ProductSettingForm = ({ refetch, onClose }) => {
             variant="destructive"
             type="button"
             onClick={() => {
-              // Optionally reset form and close if needed
               formik.resetForm();
               if (onClose) onClose();
+              navigate("/products-management"); // Navigate back
             }}
           >
             Cancel
@@ -765,4 +800,4 @@ const ProductSettingForm = ({ refetch, onClose }) => {
   );
 };
 
-export default ProductSettingForm;
+export default ProductSetting;

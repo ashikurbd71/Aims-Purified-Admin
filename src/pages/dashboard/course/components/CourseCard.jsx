@@ -40,14 +40,7 @@ const CourseCard = ({ course, refetch, viewMode = "grid" }) => {
   const [isDeleting, setIsDeleting] = useState(false)
   const { userData } = User()
 
-  const handleModalOpen = (id) => {
-    setIsModalOpen(id)
-  }
 
-
-  const handleModalClose = () => {
-    setIsModalOpen(null)
-  }
 
   const handleDelete = async (id) => {
     setIsDeleting(true)
