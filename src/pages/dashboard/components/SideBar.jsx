@@ -31,11 +31,11 @@ import { useQuery } from "@tanstack/react-query";
 const currentYear = new Date().getFullYear();
 
 const NAVIGATION_ITEMS = [
-  {
-    to: "/",
-    icon: <ChartNoAxesCombined />,
-    label: "Overview",
-  },
+  // {
+  //   to: "/",
+  //   icon: <ChartNoAxesCombined />,
+  //   label: "Overview",
+  // },
   // {
   //   to: "/team",
   //   icon: <UsersRound />,
@@ -72,11 +72,11 @@ const NAVIGATION_ITEMS = [
 
 
 
-  {
-    to: "/order-management",
-    icon: <CalendarDays />,
-    label: "Orders Management",
-  },
+  // {
+  //   to: "/order-management",
+  //   icon: <CalendarDays />,
+  //   label: "Orders Management",
+  // },
 
 
 

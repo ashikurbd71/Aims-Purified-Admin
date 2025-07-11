@@ -52,9 +52,9 @@ const CourseCard = ({ course, refetch, viewMode = "grid" }) => {
   const handleDelete = async (id) => {
     setIsDeleting(true)
     try {
-      const response = await axiosSecure.delete(`/course/${id}`)
-      if (response.status === 200) {
-        toast.success("Course deleted successfully!")
+      const response = await axiosSecure.delete(`/products/${id}`)
+      if (response.status === 204) {
+        toast.success("Product deleted successfully!")
         refetch()
       } else {
         toast.error("Something went wrong. Please try again.")
@@ -93,13 +93,13 @@ const CourseCard = ({ course, refetch, viewMode = "grid" }) => {
           >
             <div className="relative">
               <img
-                src={item?.featuredImage || "/placeholder.svg?height=200&width=400"}
+                src={item?.thumbnailImage || "/placeholder.svg?height=200&width=400"}
                 alt={item?.name || "Course Image"}
                 className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105"
               />
               <div className="absolute top-3 right-3 flex gap-2">
                 <Badge variant="secondary" className="bg-white/90 text-purple-700 shadow-sm">
-                  {!item?.status === true ? "Active" : "Disabled"}
+                  {item?.status === 'active' ? "Active" : item?.status === 'inactive' ? "Disabled" : "Draft"}
                 </Badge>
               </div>
             </div>
@@ -114,15 +114,41 @@ const CourseCard = ({ course, refetch, viewMode = "grid" }) => {
                   <Calendar className="h-4 w-4 mr-1" />
                   <span>{formatDate(item?.createdAt)}</span>
                 </div>
+
+                <div>
+                  <span className="text-gray-500 font-semibold">
+                    Availble : <span className="font-bold text-red-600">{item?.totalQuantity}</span>
+                  </span>
+                </div>
+
               </div>
 
               <p className="text-gray-600 mt-3 line-clamp-2">
                 {item?.shortDescription || "No description available"}
               </p>
+
+              <div className="flex justify-between pt-3 items-center">
+
+                <div>
+
+                  <span className="text-gray-500 font-semibold pr-1">Price:</span>
+
+
+                  <span className="font-bold text-green-600">{item?.price}</span>
+
+                </div>
+
+                <div>
+                  <span className="text-gray-500 font-semibold pr-1">Discounted:</span>
+
+                  <span className="font-bold text-red-600">{item?.discountedPrice}</span>
+                </div>
+
+              </div>
             </CardContent>
 
             <CardFooter className="px-5 py-4 bg-gray-50 flex justify-between items-center">
-              <Link to={`/course/${item?.id}`}>
+              <Link to={`/products-management/${item?.id}`}>
                 <Button variant="outline" size="sm" className="text-purple-700 border-purple-200 hover:bg-purple-50">
                   <Eye className="h-4 w-4 mr-1" />
                   View
@@ -148,14 +174,14 @@ const CourseCard = ({ course, refetch, viewMode = "grid" }) => {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This action cannot be undone. It will permanently delete this course and remove its data from
+                        This action cannot be undone. It will permanently delete this Product and remove its data from
                         your servers.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
                       <AlertDialogAction
-                        onClick={() => handleDelete(item?._id)}
+                        onClick={() => handleDelete(item?.id)}
                         disabled={isDeleting}
                         className="bg-red-600 hover:bg-red-700"
                       >
@@ -167,7 +193,7 @@ const CourseCard = ({ course, refetch, viewMode = "grid" }) => {
 
               </div>
             </CardFooter>
-          </Card>
+          </Card >
         ))}
       </>
     )
@@ -184,13 +210,13 @@ const CourseCard = ({ course, refetch, viewMode = "grid" }) => {
           <div className="flex flex-col md:flex-row">
             <div className="relative md:w-64 h-48">
               <img
-                src={item?.metadata?.featuredImage || "/placeholder.svg?height=200&width=400"}
+                src={item?.thumbnailImage || "/placeholder.svg?height=200&width=400"}
                 alt={item?.name || "Course Image"}
                 className="w-full h-full object-cover"
               />
               <div className="absolute top-3 right-3 flex gap-2">
                 <Badge variant="secondary" className="bg-white/90 text-purple-700 shadow-sm">
-                  {!item?.isEnrollmentDisabled ? "Active" : "Disabled"}
+                  {item?.status === 'active' ? "Active" : item?.status === 'inactive' ? "Disabled" : "Draft"}
                 </Badge>
               </div>
             </div>
@@ -198,7 +224,7 @@ const CourseCard = ({ course, refetch, viewMode = "grid" }) => {
             <div className="flex-1 p-5">
               <div className="flex justify-between items-start">
                 <div>
-                  <Link to={`/course/${item?._id}`} className="block group-hover:text-purple-700 transition-colors">
+                  <Link to={`/product-management/${item?.id}`} className="block group-hover:text-purple-700 transition-colors">
                     <h2 className="text-xl font-bold">{item?.name}</h2>
                   </Link>
 
@@ -206,6 +232,12 @@ const CourseCard = ({ course, refetch, viewMode = "grid" }) => {
                     <div className="flex items-center">
                       <Calendar className="h-4 w-4 mr-1" />
                       <span>{formatDate(item?.createdAt)}</span>
+                    </div>
+
+                    <div>
+                      <span className="text-gray-500 font-semibold">
+                        Availble: <span className="font-bold text-red-600">{item?.totalQuantity}</span>
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -219,7 +251,7 @@ const CourseCard = ({ course, refetch, viewMode = "grid" }) => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem asChild>
-                        <Link to={`/course/${item?._id}`} className="cursor-pointer">
+                        <Link to={`/products-management/${item?._id}`} className="cursor-pointer">
                           <Eye className="h-4 w-4 mr-2" />
                           View Course
                         </Link>
@@ -229,28 +261,47 @@ const CourseCard = ({ course, refetch, viewMode = "grid" }) => {
 
                       <DropdownMenuSeparator />
 
-                      {["ADMIN", "DEVELOPER"].includes(userData?.role) && (
-                        <DropdownMenuItem
-                          className="text-red-600 focus:text-red-600"
-                          onClick={() => {
-                            const dialog = document.getElementById(`delete-dialog-${item._id}`)
-                            if (dialog) {
-                              dialog.click()
-                            }
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete Course
-                        </DropdownMenuItem>
-                      )}
+
+                      <DropdownMenuItem
+                        className="text-red-600 focus:text-red-600"
+                        onClick={() => {
+                          const dialog = document.getElementById(`delete-dialog-${item._id}`)
+                          if (dialog) {
+                            dialog.click()
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete Course
+                      </DropdownMenuItem>
+
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TooltipProvider>
               </div>
 
               <p className="text-gray-600 mt-3 line-clamp-2">
-                {item?.metadata?.description || "No description available"}
+                {item?.description || "No description available"}
               </p>
+              <div className="flex justify-between pt-3 items-center">
+
+                <div>
+
+                  <span className="text-gray-500 font-semibold pr-1">Price:</span>
+
+
+                  <span className="font-bold text-green-600">{item?.price}</span>
+
+                </div>
+
+                <div>
+                  <span className="text-gray-500 font-semibold pr-1">Discounted:</span>
+
+                  <span className="font-bold text-red-600">{item?.discountedPrice}</span>
+                </div>
+
+              </div>
+
 
               <div className="flex gap-2 mt-4">
                 <Link to={`/course/${item?._id}`}>
@@ -280,14 +331,14 @@ const CourseCard = ({ course, refetch, viewMode = "grid" }) => {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This action cannot be undone. It will permanently delete this course and remove its data from
+                        This action cannot be undone. It will permanently delete this Product and remove its data from
                         your servers.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
                       <AlertDialogAction
-                        onClick={() => handleDelete(item?._id)}
+                        onClick={() => handleDelete(item?.id)}
                         disabled={isDeleting}
                         className="bg-red-600 hover:bg-red-700"
                       >

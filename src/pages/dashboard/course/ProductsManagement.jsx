@@ -31,105 +31,103 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import CourseCard from "./components/CourseCard";
+import CourseCard from "./components/CourseCard"; // Assuming CourseCard is used for products
 
 import User from "@/hooks/userData";
-import useCourseData from "@/hooks/useCourseData";
+import useCourseData from "@/hooks/useCourseData"; // Assuming this hook fetches product data
 import CustomMetaTag from "@/components/global/CustomMetaTags";
 import ProductCreateForm from "../components/forms/course/ProductCreateForm";
 
 const ProductsManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredCourses, setFilteredCourses] = useState([]);
+  // Renamed to be more explicit about its content
+  const [filteredAndSortedProducts, setFilteredAndSortedProducts] = useState([]);
   const [viewMode, setViewMode] = useState("grid");
-  const [sortOrder, setSortOrder] = useState("newest");
+  const [sortOrder, setSortOrder] = useState("newest"); // Default sort order
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState(""); // State for category filter
 
+  // Fetch product data (assuming useCourseData fetches products)
   const [courseData, courseDataRefetch] = useCourseData();
   const { userData } = User();
 
-  // Initialize filtered courses
+  // Dynamically get unique categories from the fetched product data
+  // Ensures that your category filter always reflects available categories
+  const categories = courseData
+    ? [...new Set(courseData.map((product) => product.category?.name))]
+      .filter(Boolean) // Remove any undefined/null entries if a product has no category
+    : [];
+
+  // This effect runs whenever courseData, searchQuery, selectedCategory, or sortOrder changes.
+  // It applies all filters and sorting to the raw data.
   useEffect(() => {
-    if (courseData) {
-      setFilteredCourses(courseData);
-      setIsLoading(false);
-    }
-  }, [courseData]);
+    if (!courseData) return; // Don't proceed if data isn't loaded yet
 
-  // Handle search
-  useEffect(() => {
-    if (!courseData) return;
+    let currentProducts = [...courseData]; // Start with a copy of the raw data
 
-    if (!searchQuery.trim()) {
-      setFilteredCourses(courseData);
-      return;
-    }
-
-    const query = searchQuery.toLowerCase();
-    const filtered = courseData.filter(
-      (course) =>
-        course.name?.toLowerCase().includes(query) ||
-        course?.description?.toLowerCase().includes(query)
-    );
-
-    setFilteredCourses(filtered);
-  }, [searchQuery, courseData]);
-
-  // Handle sort
-  const handleSort = (order) => {
-    setSortOrder(order);
-
-    let sorted = [...filteredCourses];
-
-    switch (order) {
-      case "newest":
-        sorted.sort(
-          (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
-        );
-        break;
-      case "oldest":
-        sorted.sort(
-          (a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0)
-        );
-        break;
-      case "nameAsc":
-        sorted.sort((a, b) => a.name?.localeCompare(b.name));
-        break;
-      case "nameDesc":
-        sorted.sort((a, b) => b.name?.localeCompare(a.name));
-        break;
-      default:
-        break;
+    // 1. Apply Search Filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      currentProducts = currentProducts.filter(
+        (product) =>
+          product.name?.toLowerCase().includes(query) ||
+          product.description?.toLowerCase().includes(query)
+      );
     }
 
-    setFilteredCourses(sorted);
-  };
+    // 2. Apply Category Filter
+    if (selectedCategory) {
+      currentProducts = currentProducts.filter(
+        (product) => product.category?.name === selectedCategory
+      );
+    }
 
+    // 3. Apply Sorting
+    let sortedProducts = [...currentProducts]; // Copy for sorting
+    if (sortOrder === "newest") {
+      sortedProducts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    } else if (sortOrder === "oldest") {
+      sortedProducts.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    } else if (sortOrder === "price_asc") {
+      sortedProducts.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+    } else if (sortOrder === "price_desc") {
+      sortedProducts.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+    }
+
+    setFilteredAndSortedProducts(sortedProducts);
+    setIsLoading(false); // Set loading to false once processing is done
+  }, [courseData, searchQuery, selectedCategory, sortOrder]); // Dependencies for this effect
+
+  // Handles closing the product creation modal
   const handleModalClose = () => {
     setIsModalOpen(false);
+    courseDataRefetch(); // Refetch products to show the newly added one
   };
 
-  // Get course stats
-  const getCourseStats = () => {
-    if (!courseData) return { total: 0 };
+  // Calculates and returns product statistics
+  const getProductStats = () => {
+    if (!courseData) return { total: 0, active: 0, draft: 0 };
 
     return {
       total: courseData.length,
       active: courseData.filter(
-        (course) => !course.status || course.status === "active"
+        (product) => product.status == "active"
       ).length,
       draft: courseData.filter(
-        (course) => course.status === "draft"
+        (product) => product.status === "draft"
       ).length,
     };
   };
 
-  const stats = getCourseStats();
+  const stats = getProductStats();
+
+  // Check if the current user has admin or developer role
+  // const canCreateProduct = ["ADMIN", "DEVELOPER"].includes(userData?.role);
 
   return (
     <div className="container mx-auto px-4 py-6">
-      <CustomMetaTag title="Course Management" />
+      <CustomMetaTag title="Product Management" />
 
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start mb-8">
@@ -140,7 +138,8 @@ const ProductsManagement = () => {
 
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogTrigger asChild>
-
+            {/* "Create Product" button is now correctly displayed based on user role */}
+            { }
             <Button className="mt-4 md:mt-0 rounded-full bg-black shadow-md">
               <Plus className="mr-2 h-4 w-4" />
               Create Product
@@ -198,6 +197,24 @@ const ProductsManagement = () => {
             </div>
           </CardContent>
         </Card>
+
+        <Card className="bg-gradient-to-br from-orange-50 to-amber-50 border-none shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500 font-medium">
+                  Draft Products
+                </p>
+                <p className="text-3xl font-bold text-orange-600">
+                  {stats.draft || 0}
+                </p>
+              </div>
+              <div className="bg-orange-100 p-3 rounded-full">
+                <Clock className="h-6 w-6 text-orange-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filters and Search */}
@@ -239,43 +256,59 @@ const ProductsManagement = () => {
             </Button>
           </div>
 
+          {/* Category Dropdown */}
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="border px-3 py-2 rounded-md"
+          >
+            <option value="">-- All Categories --</option>
+            {/* Render categories dynamically */}
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
+
           {/* Sort Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="flex items-center gap-2">
                 <SortAsc className="h-4 w-4" />
-                {sortOrder === "newest"
-                  ? "Newest"
-                  : sortOrder === "oldest"
-                    ? "Oldest"
-                    : sortOrder === "nameAsc"
-                      ? "A-Z"
-                      : "Z-A"}
+                <span>
+                  {sortOrder === "newest"
+                    ? "Newest"
+                    : sortOrder === "oldest"
+                      ? "Oldest"
+                      : sortOrder === "price_asc"
+                        ? "Price: Low to High"
+                        : "Price: High to Low"}
+                </span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleSort("newest")}>
-                <Clock className="h-4 w-4 mr-2" />
-                Newest First
+              <DropdownMenuItem onClick={() => setSortOrder("newest")}>
+                Newest
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleSort("oldest")}>
-                <Clock className="h-4 w-4 mr-2" />
-                Oldest First
+              <DropdownMenuItem onClick={() => setSortOrder("oldest")}>
+                Oldest
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => handleSort("nameAsc")}>
-                Name (A-Z)
+              <DropdownMenuItem onClick={() => setSortOrder("price_asc")}>
+                Price: Low to High
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleSort("nameDesc")}>
-                Name (Z-A)
+              <DropdownMenuItem onClick={() => setSortOrder("price_desc")}>
+                Price: High to Low
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
 
-      {/* Course Content */}
+      {/* Product Content */}
       {isLoading ? (
+        // Loading skeleton when data is being fetched
         <div
           className={`grid grid-cols-1 ${viewMode === "grid" ? "md:grid-cols-2 lg:grid-cols-3" : ""
             } gap-6`}
@@ -297,27 +330,26 @@ const ProductsManagement = () => {
           ))}
         </div>
       ) : courseData?.length === 0 ? (
+        // Message when no products exist at all
         <div className="flex flex-col items-center justify-center py-16 bg-gray-50 rounded-lg">
           <BookOpen className="h-16 w-16 text-gray-300 mb-4" />
           <h2 className="text-xl font-semibold text-gray-700 mb-2">
-            No Courses Yet
+            No Product Yet
           </h2>
           <p className="text-gray-500 mb-6 text-center max-w-md">
-            Get started by creating your first course. Your courses will appear
-            here.
+            Get started by creating your first product. Your products will
+            appear here.
           </p>
-
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
             <DialogTrigger asChild>
-              {["ADMIN", "DEVELOPER"].includes(userData?.role) && (
-                <Button className="rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-md">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create Your First Course
-                </Button>
-              )}
+              { }
+              <Button className="rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-md">
+                <Plus className="mr-2 h-4 w-4" />
+                Create Your First Product
+              </Button>
+
             </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
-
               <ProductCreateForm
                 refetch={courseDataRefetch}
                 onClose={handleModalClose}
@@ -325,7 +357,17 @@ const ProductsManagement = () => {
             </DialogContent>
           </Dialog>
         </div>
+      ) : filteredAndSortedProducts.length === 0 ? (
+        // Message when filters/search yield no results
+        <div className="text-center py-12">
+          <Search className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+          <h3 className="text-lg font-medium text-gray-900">
+            No Product found
+          </h3>
+          <p className="text-gray-500 mt-2">Try adjusting your search query or filters.</p>
+        </div>
       ) : (
+        // Display products in grid or list view
         <div
           className={
             viewMode === "grid"
@@ -335,23 +377,14 @@ const ProductsManagement = () => {
         >
           <CourseCard
             refetch={courseDataRefetch}
-            course={filteredCourses}
+            course={filteredAndSortedProducts} // Pass the entire array
             viewMode={viewMode}
           />
-        </div>
-      )}
 
-      {/* No Results */}
-      {!isLoading && courseData?.length > 0 && filteredCourses.length === 0 && (
-        <div className="text-center py-12">
-          <Search className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900">
-            No courses found
-          </h3>
-          <p className="text-gray-500 mt-2">Try adjusting your search query</p>
         </div>
-      )}
-    </div>
+      )
+      }
+    </div >
   );
 };
 

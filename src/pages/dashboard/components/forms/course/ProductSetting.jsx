@@ -3,30 +3,28 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { FileUp } from "lucide-react";
+import { FileUp, X } from "lucide-react"; // Import X for remove icon
 import { Textarea } from "@/components/ui/textarea";
 import Select, { components } from "react-select";
 import { Button } from "@/components/ui/button";
 import useAxiosSecure from "@/hooks/useAxiosSecure";
 import { toast } from "sonner";
-import axios from "axios";
+import axios from "axios"; // Assuming you have a direct axios instance for file uploads if needed
 import ButtonLoader from "@/components/global/ButtonLoader";
 import { getCategory } from "@/Api/selectorApi";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom"; // To get productId from URL
+import { useQuery } from "@tanstack/react-query"; // For fetching product data
 
-const ProductCreateForm = ({ refetch, onClose }) => {
+const ProductSettingForm = ({ refetch, onClose }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedStatus, setSelectedStatus] = useState(null);
   const [selectedColors, setSelectedColors] = useState([]);
+
   const axiosSecure = useAxiosSecure();
-  const IMGBB_API_KEY = "90087a428cac94ac2e8021a26aeb9f9e";
-
-  // State to hold thumbnail preview URL
-  const [thumbnailPreview, setThumbnailPreview] = useState(null);
-  // State to hold additional images preview URLs
-  const [imagesPreviews, setImagesPreviews] = useState([]);
-
-
+  const { id } = useParams(); // Get the product ID from the URL
+  console.log(id)
+  // Options for product colors
   const productColorOptions = [
     { value: "red", label: "Red" },
     { value: "green", label: "Green" },
@@ -41,8 +39,21 @@ const ProductCreateForm = ({ refetch, onClose }) => {
     { value: "grey", label: "Grey" },
   ];
 
+
+
+  const statusOptions = [
+
+    { value: 'active', label: 'Active' },
+    { value: 'inactive', label: 'Inactive' },
+    { value: 'out_of_stock', label: 'Out Of Stock' },
+  ]
+
+
   const [categoryOptions, setCategoryOptions] = useState([]);
 
+  // --- Data Fetching for Product and Categories ---
+
+  // Fetch categories for the dropdown
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -57,18 +68,33 @@ const ProductCreateForm = ({ refetch, onClose }) => {
         toast.error("Failed to load categories.");
       }
     };
-
     fetchData();
   }, []);
 
+  // Fetch existing product data using useQuery
+  const { data: product, isLoading, error } = useQuery({
+    queryKey: ["productData", id], // Include productId in queryKey
+    queryFn: async () => {
+      if (!id) return null; // Prevent fetching if productId is not available
+      try {
+        const response = await axiosSecure.get(`/products/${id}`); // Adjust API endpoint
+        return response?.data?.data;
+      } catch (err) {
+        console.error("Error fetching product data:", err);
+        toast.error("Failed to load product data.");
+        throw err;
+      }
+    },
+    enabled: !!id, // Only run query if productId exists
+  });
 
-  const handleResetForm = () => {
-    formik.resetForm();
-    setSelectedCategory(null);
-    setSelectedColors([]);
-    setThumbnailPreview(null); // Reset thumbnail preview
-    setImagesPreviews([]); // Reset additional images preview
-  };
+  console.log(product)
+
+  // --- Formik Setup ---
+
+
+  const navigate = useNavigate();
+
 
   const formik = useFormik({
     initialValues: {
@@ -81,8 +107,12 @@ const ProductCreateForm = ({ refetch, onClose }) => {
       discount: "",
       totalQuantity: "",
       productColor: [],
-      thumbnailImage: null,
-      images: [],
+      // These are for handling new file uploads (will be File objects)
+      newThumbnailImage: null,
+      newImages: [],
+      // These are for holding existing image URLs from the fetched product
+      existingThumbnailImage: "",
+      existingImages: [],
     },
     validationSchema: Yup.object({
       categoryId: Yup.string().required("Product Category is required"),
@@ -94,13 +124,12 @@ const ProductCreateForm = ({ refetch, onClose }) => {
         .required("Product Price is required")
         .min(0, "Price cannot be less than 0"),
       discount: Yup.number()
-        .notRequired()
+        .optional() // Use optional instead of notRequired for numbers/dates
         .test(
           "is-valid-discount",
           "Discount cannot be greater than the price",
           function (value) {
             const { price } = this.parent;
-            // Allow empty or null discount if not required, otherwise validate against price
             return value === undefined || value === null || value <= price;
           }
         ),
@@ -110,62 +139,76 @@ const ProductCreateForm = ({ refetch, onClose }) => {
         .integer("Quantity must be an integer"),
       productColor: Yup.array().min(1, "At least one color is required"),
 
-      images: Yup.array().of(
+      newImages: Yup.array().of(
         Yup.mixed()
           .test("fileSize", "Image is too large (max 10MB)", (value) => {
-            return value && value.size <= 10 * 1024 * 1024; // 10 MB
+            return value && value.size <= 10 * 1024 * 1024;
           })
           .test("fileType", "Unsupported file format for image", (value) => {
             return value && ['image/jpeg', 'image/png', 'image/svg+xml'].includes(value.type);
           })
-      ).notRequired(),
+      ).notRequired(), // Optional for additional images
     }),
 
-    onSubmit: async (values, { resetForm }) => {
-      console.log('Submitting form with values:', values);
+    onSubmit: async (values) => {
       setIsSubmitting(true);
-      toast.loading("Creating product...");
+      toast.loading("Updating product...");
 
       try {
-        // 1. Upload Thumbnail Image
-        let thumbnailUrl = "";
-        if (values.thumbnailImage) {
+        // Generic Image Upload Function (replace with your actual API)
+        const uploadImage = async (file) => {
           const formData = new FormData();
-          formData.append("image", values.thumbnailImage);
-          console.log("Uploading thumbnail image:", values.thumbnailImage);
-          const imgbbResponse = await axios.post(
-            `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,
-            formData
-          );
-          if (imgbbResponse.data.success) {
-            thumbnailUrl = imgbbResponse.data.data.url;
-            toast.success("Thumbnail uploaded successfully!");
-          } else {
-            throw new Error("Failed to upload thumbnail to ImgBB.");
-          }
-        }
-
-        // 2. Upload Additional Images
-        const imageUrls = [];
-        if (values.images && values.images.length > 0) {
-          for (const imageFile of values.images) {
-            const formData = new FormData();
-            formData.append("image", imageFile);
-
-            const imgbbResponse = await axios.post(
-              `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,
-              formData
+          formData.append("file", file); // Adjust 'file' to match your backend's expected field name
+          try {
+            // Use your actual image upload endpoint and API key if required
+            const response = await axios.post(
+              "https://api.example.com/v1/upload/images", // Replace with your image upload API endpoint
+              formData,
+              {
+                headers: { "Content-Type": "multipart/form-data" },
+              }
             );
-            if (imgbbResponse.data.success) {
-              imageUrls.push(imgbbResponse.data.data.url);
+            // Assuming your upload API returns a URL in response.data.url or similar
+            if ((response?.status === 200 || response?.status === 201) && response?.data?.url) {
+              return response.data.url;
             } else {
-              throw new Error(`Failed to upload image ${imageFile.name} to ImgBB.`);
+              console.error("Image upload failed: Invalid response", response);
+              return null;
             }
+          } catch (uploadError) {
+            console.error("Error uploading image:", uploadError);
+            toast.error(`Image upload failed: ${uploadError.message}`);
+            return null;
           }
-          toast.success("Additional images uploaded successfully!");
+        };
+
+        // Handle Thumbnail image upload
+        let finalThumbnailUrl = values.existingThumbnailImage;
+        if (values.newThumbnailImage instanceof File) {
+          const uploadedUrl = await uploadImage(values.newThumbnailImage);
+          if (uploadedUrl) {
+            finalThumbnailUrl = uploadedUrl;
+          } else {
+            toast.error("Failed to upload new thumbnail image.");
+            setIsSubmitting(false);
+            toast.dismiss();
+            return;
+          }
         }
 
-        // 3. Prepare Payload for Backend
+        // Handle Additional images upload
+        let finalImageUrls = [...values.existingImages]; // Start with existing images
+        if (values.newImages && values.newImages.length > 0) {
+          const uploadPromises = values.newImages.map(file => uploadImage(file));
+          const newUploadedUrls = await Promise.all(uploadPromises);
+          const validNewUrls = newUploadedUrls.filter(url => url !== null);
+          finalImageUrls = [...finalImageUrls, ...validNewUrls]; // Combine
+          if (validNewUrls.length !== values.newImages.length) {
+            toast.warning("Some additional images failed to upload.");
+          }
+        }
+
+        // Prepare the final data structure for the API call
         const productData = {
           categoryId: values.categoryId,
           productCode: values.code,
@@ -173,66 +216,137 @@ const ProductCreateForm = ({ refetch, onClose }) => {
           description: values.description,
           shortDescription: values.shortDescription,
           price: values.price,
-          // Correctly handle discount: send null if empty, otherwise the value
           discountedPrice: values.discount === "" ? null : values.discount,
           totalQuantity: values.totalQuantity,
           productColor: values.productColor,
-          thumbnailImage: thumbnailUrl,
-          images: imageUrls,
+          thumbnailImage: finalThumbnailUrl, // Use the resolved URL
+          images: finalImageUrls, // Use the combined image URLs
+          status: values.status, // Default to 'active' if not set
         };
 
-        // 4. Send Data to Backend
-        // Ensure your backend endpoint is correctly set for creation, e.g., "/products" not "/products/create"
-        // Based on typical REST practices: POST to collection endpoint.
-        const response = await axiosSecure.post("/products/create", productData); // Changed to /products
+        // Send Data to Backend for update (PATCH request for existing resource)
+        const response = await axiosSecure.patch(`/products/${id}`, productData); // Adjust API endpoint and method
 
-        if (response.status === 201) {
-
+        if (response.status === 200) { // Typically 200 for successful PATCH/PUT
+          toast.success("Product updated successfully!");
+          // Consider re-fetching product data in the parent component or via a global state management
           if (refetch) refetch();
-
           if (onClose) onClose();
 
+          navigate("/products-management");
         } else {
-          // This else block might not be hit if backend throws errors,
-          // as catch block would handle non-2xx responses.
           toast.error("Something went wrong. Please try again.");
         }
       } catch (error) {
-        console.error("Error adding product:", error);
-        // Improved error message handling from backend
-        const errorMessage = error.response?.data?.message || error.message || "Failed to add product.";
+        console.error("Error updating product:", error);
+        const errorMessage = error.response?.data?.message || error.message || "Failed to update product.";
         toast.error(errorMessage);
       } finally {
         setIsSubmitting(false);
-        // Redirect to course page after submission
-        toast.dismiss(); // Dismiss the loading toast regardless of success/failure
+        toast.dismiss();
       }
     },
   });
 
-  // Handle thumbnail file change
-  const handleThumbnailImageChange = (event) => {
+  // --- Populate Formik values when product data and categories are loaded ---
+  useEffect(() => {
+    if (product && categoryOptions.length > 0) {
+      // Find the selected category object for React-Select
+      const preSelectedCategory = categoryOptions.find(
+        (option) => option.value === product.categoryId
+      );
+      setSelectedCategory(preSelectedCategory);
+
+      // Set selected colors for React-Select
+      const preSelectedColors = productColorOptions.filter((option) =>
+        product.productColor.includes(option.value)
+      );
+      setSelectedColors(preSelectedColors);
+
+      const preSelectedstatus = statusOptions.filter((option) =>
+        product.status.includes(option.value)
+      );
+      setSelectedStatus(preSelectedstatus);
+
+      formik.setValues({
+        categoryId: product.categoryId || null,
+        code: product.productCode || "",
+        name: product.name || "",
+        description: product.description || "",
+        shortDescription: product.shortDescription || "",
+        price: product.price || "",
+        discount: product.discountedPrice || "", // Use discountedPrice from fetched data
+        totalQuantity: product.totalQuantity || "",
+        productColor: product.productColor || [],
+        // Existing image URLs (from fetched product data)
+        existingThumbnailImage: product.thumbnailImage || "",
+        existingImages: product.images || [],
+        // New file inputs are null initially
+        status: product.status, // Default to 'active' if not set
+        newThumbnailImage: null,
+        newImages: [],
+      });
+    }
+  }, [product, categoryOptions]); // Dependencies for useEffect
+
+  // --- Image Handling Functions (for previews and removal) ---
+
+  const handleNewThumbnailImageChange = (event) => {
     const file = event.currentTarget.files[0];
-    formik.setFieldValue("thumbnailImage", file);
+    formik.setFieldValue("newThumbnailImage", file);
     if (file) {
-      setThumbnailPreview(URL.createObjectURL(file)); // Create preview URL
-    } else {
-      setThumbnailPreview(null);
+      // Clear existing thumbnail when a new one is selected
+      formik.setFieldValue("existingThumbnailImage", "");
     }
   };
 
-  // Handle multiple files change
-  const handleImagesChange = (event) => {
-    const files = Array.from(event.currentTarget.files);
-    formik.setFieldValue("images", files);
-    setImagesPreviews(files.map(file => URL.createObjectURL(file))); // Create preview URLs
+  const handleRemoveExistingThumbnail = () => {
+    formik.setFieldValue("existingThumbnailImage", "");
+    formik.setFieldValue("newThumbnailImage", null); // Clear new thumbnail if any
   };
 
+  const handleNewImagesChange = (event) => {
+    const files = Array.from(event.currentTarget.files);
+    formik.setFieldValue("newImages", files);
+  };
+
+  const handleRemoveExistingImage = (indexToRemove) => {
+    const updatedExistingImages = formik.values.existingImages.filter(
+      (_, index) => index !== indexToRemove
+    );
+    formik.setFieldValue("existingImages", updatedExistingImages);
+  };
+
+  const handleRemoveNewImage = (indexToRemove) => {
+    const updatedNewImages = formik.values.newImages.filter(
+      (_, index) => index !== indexToRemove
+    );
+    formik.setFieldValue("newImages", updatedNewImages);
+  };
+
+  // --- React-Select Custom Styles and Indicator ---
   const customStyles = {
     control: (provided) => ({
       ...provided,
       border: "1px solid #E6E6E6",
       backgroundColor: "#FFFFFF",
+      minHeight: '38px', // Ensure consistent height
+    }),
+    multiValue: (provided) => ({
+      ...provided,
+      backgroundColor: '#e0e7ff', // Light blue background for selected items
+    }),
+    multiValueLabel: (provided) => ({
+      ...provided,
+      color: '#4338ca', // Darker text for selected items
+    }),
+    multiValueRemove: (provided) => ({
+      ...provided,
+      color: '#4338ca',
+      ':hover': {
+        backgroundColor: '#c7d2fe',
+        color: 'red',
+      },
     }),
   };
 
@@ -253,28 +367,36 @@ const ProductCreateForm = ({ refetch, onClose }) => {
     );
   };
 
+  if (isLoading) {
+    return <div className="text-center py-10">Loading product data...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-10 text-red-500">Error: {error.message}</div>;
+  }
+
+  if (!product && !isLoading) {
+    return <div className="text-center py-10 text-gray-500">Product not found or invalid ID.</div>;
+  }
+
   return (
     <form onSubmit={formik.handleSubmit}>
       <div className="space-y-4 backdrop: mt-0">
         {/* Product Category */}
-        <div className="">
-          <div className="relative w-fit">
-            <Label className="block">
-              Product Category<span className="text-xl text-red-500">*</span>
-            </Label>
-          </div>
+        <div>
+          <Label className="block">
+            Product Category<span className="text-xl text-red-500">*</span>
+          </Label>
           <Select
             className="custom-select w-full rounded-sm bg-[#FBFDFC] border border-[#E6E6E6]"
             components={{ DropdownIndicator }}
             options={categoryOptions}
             placeholder="Select Category"
             styles={customStyles}
-            value={categoryOptions.find((option) =>
-              option.value === selectedCategory
-            )}
+            value={selectedCategory}
             onChange={(selectedOption) => {
               const selectedValue = selectedOption ? selectedOption.value : null;
-              setSelectedCategory(selectedValue);
+              setSelectedCategory(selectedOption); // Store the full option for display
               formik.setFieldValue("categoryId", selectedValue);
             }}
             onBlur={() => formik.setFieldTouched('categoryId', true)}
@@ -328,7 +450,7 @@ const ProductCreateForm = ({ refetch, onClose }) => {
         </div>
 
         {/* Product Description */}
-        <div className="">
+        <div>
           <Label htmlFor="description" className="block">
             Product Description
           </Label>
@@ -344,7 +466,7 @@ const ProductCreateForm = ({ refetch, onClose }) => {
         </div>
 
         {/* Product Short Description */}
-        <div className="">
+        <div>
           <Label htmlFor="shortDescription" className="block">
             Product Short Description
           </Label>
@@ -441,12 +563,10 @@ const ProductCreateForm = ({ refetch, onClose }) => {
         </div>
 
         {/* Product Available Color */}
-        <div className="">
-          <div className="relative w-fit">
-            <Label className="block">
-              Product Available Color<span className="text-xl text-red-500">*</span>
-            </Label>
-          </div>
+        <div>
+          <Label className="block">
+            Product Available Color<span className="text-xl text-red-500">*</span>
+          </Label>
           <Select
             isMulti
             className="custom-select w-full rounded-sm bg-[#FBFDFC] border border-[#E6E6E6]"
@@ -454,14 +574,12 @@ const ProductCreateForm = ({ refetch, onClose }) => {
             options={productColorOptions}
             placeholder="Select Color"
             styles={customStyles}
-            value={productColorOptions.filter((option) =>
-              selectedColors.includes(option.value)
-            )}
+            value={selectedColors}
             onChange={(selectedOptions) => {
               const selectedValues = selectedOptions
                 ? selectedOptions.map((option) => option.value)
                 : [];
-              setSelectedColors(selectedValues);
+              setSelectedColors(selectedOptions); // Store full options for display
               formik.setFieldValue("productColor", selectedValues);
             }}
             onBlur={() => formik.setFieldTouched('productColor', true)}
@@ -473,13 +591,34 @@ const ProductCreateForm = ({ refetch, onClose }) => {
           )}
         </div>
 
+        <div>
+          <Label className="block">
+            Product Status
+          </Label>
+          <Select
+            className="custom-select w-full rounded-sm bg-[#FBFDFC] border border-[#E6E6E6]"
+            components={{ DropdownIndicator }}
+            options={statusOptions}
+            placeholder="Select Status"
+            styles={customStyles}
+            value={selectedStatus}
+            onChange={(selectedOption) => {
+              const selectedValue = selectedOption ? selectedOption.value : null;
+              setSelectedStatus(selectedOption); // Store the full option for display
+              formik.setFieldValue("status", selectedValue);
+            }}
+            onBlur={() => formik.setFieldTouched('status', true)}
+          />
+
+        </div>
+
         {/* Thumbnail Upload */}
-        <div className="">
-          <Label htmlFor="thumbnailImage" className="block">
+        <div>
+          <Label htmlFor="newThumbnailImage" className="block">
             Thumbnail <span className="text-xl text-red-500">*</span>
           </Label>
           <label
-            htmlFor="thumbnailImage"
+            htmlFor="newThumbnailImage"
             className="border border-dashed border-gray-300 p-6 rounded-md text-center cursor-pointer flex flex-col items-center justify-center gap-2 mt-1"
           >
             <span className="bg-gray-200 dark:text-gray-800 p-3 rounded-full">
@@ -489,41 +628,53 @@ const ProductCreateForm = ({ refetch, onClose }) => {
               <span className="text-sm text-blue-600 font-medium">
                 Click here
               </span>{" "}
-              to upload your file or drag.
+              to upload new file or drag.
             </p>
             <span className="text-xs text-gray-500">
               Supported Format: JPG, PNG, SVG (Max 10MB)
             </span>
             <Input
-              id="thumbnailImage"
-              name="thumbnailImage"
+              id="newThumbnailImage"
+              name="newThumbnailImage"
               type="file"
               accept=".jpg, .png, .svg"
               className="hidden"
-              onChange={handleThumbnailImageChange}
-              onBlur={() => formik.setFieldTouched('thumbnailImage', true)}
+              onChange={handleNewThumbnailImageChange}
+              onBlur={() => formik.setFieldTouched('newThumbnailImage', true)}
             />
           </label>
-          {thumbnailPreview && (
-            <div className="mt-2 text-center">
-              <img src={thumbnailPreview} alt="Thumbnail Preview" className="max-w-xs mx-auto h-auto rounded-md object-cover" />
-              <p className="text-sm text-gray-600 mt-1">
-                {formik.values.thumbnailImage?.name} ({(formik.values.thumbnailImage?.size / 1024 / 1024).toFixed(2)} MB)
-              </p>
+          {/* Display existing thumbnail or newly selected thumbnail */}
+          {(formik.values.existingThumbnailImage || formik.values.newThumbnailImage) ? (
+            <div className="relative w-24 h-16 mt-2">
+              <img
+                src={
+                  formik.values.newThumbnailImage
+                    ? URL.createObjectURL(formik.values.newThumbnailImage)
+                    : formik.values.existingThumbnailImage
+                }
+                alt="Thumbnail Preview"
+                className="w-full h-full object-cover rounded-md"
+              />
+              <span
+                className="absolute -right-2 -top-2 bg-red-500 rounded-full p-[2px] cursor-pointer"
+                onClick={handleRemoveExistingThumbnail}
+              >
+                <X size={14} className="text-white hover:text-gray-800" />
+              </span>
             </div>
-          )}
-          {formik.touched.thumbnailImage && formik.errors.thumbnailImage && (
-            <p className="text-red-500 text-sm mt-1">{formik.errors.thumbnailImage}</p>
+          ) : null}
+          {formik.touched.newThumbnailImage && formik.errors.newThumbnailImage && (
+            <p className="text-red-500 text-sm mt-1">{formik.errors.newThumbnailImage}</p>
           )}
         </div>
 
         {/* Additional Images Upload */}
-        <div className="">
-          <Label htmlFor="images" className="font-medium block">
-            Images (Optional)
+        <div>
+          <Label htmlFor="newImages" className="font-medium block">
+            Additional Images (Optional)
           </Label>
           <label
-            htmlFor="images"
+            htmlFor="newImages"
             className="border border-dashed border-gray-300 p-6 rounded-md text-center cursor-pointer flex flex-col items-center justify-center gap-2 mt-2"
           >
             <span className="bg-gray-200 dark:text-gray-800 p-3 rounded-full">
@@ -533,36 +684,62 @@ const ProductCreateForm = ({ refetch, onClose }) => {
               <span className="text-sm text-blue-600 font-medium">
                 Click here
               </span>{" "}
-              to upload your files.
+              to upload new files.
             </p>
             <span className="text-xs text-gray-500">
               Supported Format: JPG, PNG, SVG (Max 10MB each)
             </span>
             <Input
-              id="images"
-              name="images"
+              id="newImages"
+              name="newImages"
               type="file"
               multiple
               accept=".jpg, .png, .svg"
               className=" hidden "
-              onChange={handleImagesChange}
-              onBlur={() => formik.setFieldTouched('images', true)}
+              onChange={handleNewImagesChange}
+              onBlur={() => formik.setFieldTouched('newImages', true)}
             />
           </label>
-          {imagesPreviews.length > 0 && (
-            <div className="mt-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-              {imagesPreviews.map((src, index) => (
-                <div key={index} className="relative">
-                  <img src={src} alt={`Image ${index + 1} Preview`} className="w-full h-24 object-cover rounded-md" />
-                  <p className="text-xs text-gray-600 mt-1 truncate">
-                    {formik.values.images[index]?.name}
-                  </p>
+          <div className="mt-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+            {/* Display existing images */}
+            {formik.values.existingImages.length > 0 && (
+              formik.values.existingImages.map((imageUrl, index) => (
+                <div key={`existing-${index}`} className="relative w-24 h-16">
+                  <img
+                    src={imageUrl}
+                    alt={`Existing Image ${index + 1}`}
+                    className="w-full h-full object-cover rounded-md"
+                  />
+                  <span
+                    className="absolute -right-2 -top-2 bg-red-500 rounded-full p-[2px] cursor-pointer"
+                    onClick={() => handleRemoveExistingImage(index)}
+                  >
+                    <X size={14} className="text-white hover:text-gray-800" />
+                  </span>
                 </div>
-              ))}
-            </div>
-          )}
-          {formik.touched.images && formik.errors.images ? (
-            <p className="text-red-500 text-sm mt-1">{formik.errors.images}</p>
+              ))
+            )}
+            {/* Display newly selected images (before upload) */}
+            {formik.values.newImages.length > 0 && (
+              formik.values.newImages.map((file, index) => (
+                <div key={`new-${index}`} className="relative w-24 h-16">
+                  <img
+                    src={URL.createObjectURL(file)}
+                    alt={`New Image ${index + 1}`}
+                    className="w-full h-full object-cover rounded-md"
+                  />
+                  <span
+                    className="absolute -right-2 -top-2 bg-red-500 rounded-full p-[2px] cursor-pointer"
+                    onClick={() => handleRemoveNewImage(index)}
+                  >
+                    <X size={14} className="text-white hover:text-gray-800" />
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+          {formik.touched.newImages && formik.errors.newImages ? (
+            <p className="text-red-500 text-sm mt-1">{formik.errors.newImages}</p>
           ) : null}
         </div>
 
@@ -572,14 +749,15 @@ const ProductCreateForm = ({ refetch, onClose }) => {
             variant="destructive"
             type="button"
             onClick={() => {
-              handleResetForm();
+              // Optionally reset form and close if needed
+              formik.resetForm();
               if (onClose) onClose();
             }}
           >
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? <ButtonLoader /> : "Create Product"}
+            {isSubmitting ? <ButtonLoader /> : "Update Product"}
           </Button>
         </div>
       </div>
@@ -587,4 +765,4 @@ const ProductCreateForm = ({ refetch, onClose }) => {
   );
 };
 
-export default ProductCreateForm;
+export default ProductSettingForm;

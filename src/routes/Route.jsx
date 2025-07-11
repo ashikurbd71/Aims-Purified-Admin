@@ -41,6 +41,7 @@ import ShipmentList from "@/pages/dashboard/Shipment/ShipmentList";
 import ViewClass from "@/pages/dashboard/course/class/components/ViewClass";
 import CategoryManagement from "@/pages/dashboard/category/CategoryManagement";
 import ProductsManagement from "@/pages/dashboard/course/ProductsManagement";
+import ProductSetting from "@/pages/dashboard/components/forms/course/ProductSetting";
 
 
 // Define the routing structure using `createBrowserRouter`.
@@ -76,7 +77,7 @@ const Router = createBrowserRouter([
       <DashboardLayout />
 
     ),
-    errorElement: <NotFoundPage />,
+    // errorElement: <NotFoundPage />,
     children: [
       {
         /**
@@ -96,6 +97,16 @@ const Router = createBrowserRouter([
         element: (
 
           <ProductsManagement />
+
+        ),
+      },
+
+
+      {
+        path: "/products-management/:id",
+        element: (
+
+          <ProductSetting />
 
         ),
       },
