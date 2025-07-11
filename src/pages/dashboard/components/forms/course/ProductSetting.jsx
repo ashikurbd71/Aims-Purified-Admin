@@ -90,7 +90,7 @@ const ProductSetting = ({ onClose }) => {
   const handleNavigateAndFullReload = () => {
     if (typeof window !== 'undefined') {
       // This will navigate to /products-management AND cause a full page reload
-      window.location.href = "/";
+      window.location.href = "/products-management";
     } else {
       console.warn("window object not available for navigation.");
     }

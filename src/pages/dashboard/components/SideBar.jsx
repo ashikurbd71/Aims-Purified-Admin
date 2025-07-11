@@ -41,8 +41,9 @@ const NAVIGATION_ITEMS = [
   //   icon: <UsersRound />,
   //   label: "Team Management",
   // },
+  // category - management
   {
-    to: "/category-management",
+    to: "/",
     icon: <ClipboardPen />,
     label: "Category Management",
   },

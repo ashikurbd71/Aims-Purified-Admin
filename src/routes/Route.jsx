@@ -92,9 +92,8 @@ const Router = createBrowserRouter([
       //     </PrivateRoutes>
       //   ),
       // },
-      // handleNavigateAndFullReload
       {
-        path: "/",
+        path: "/products-management",
         element: (
 
           <ProductsManagement />
@@ -124,7 +123,7 @@ const Router = createBrowserRouter([
       },
 
       {
-        path: "/category-management",
+        path: "/",
         element: (
 
           <CategoryManagement />
