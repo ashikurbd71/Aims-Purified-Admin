@@ -10,7 +10,7 @@ const ProfileBar = ({ toggleSidebar }) => {
   // const { user } = useContext(AuthContext);
 
   return (
-    <div className="w-full border-b h-12 md:h-24 flex items-center justify-between py-8 px-2 lg:p-8 ">
+    <div className="w-full border-b lg:bg-white bg-[#F8FAFC] h-12 md:h-24 flex items-center justify-between py-8 px-2 lg:p-8 ">
       <div className="  flex items-center">
         <img
           src={FeaturedImage || "https://via.placeholder.com/150"}

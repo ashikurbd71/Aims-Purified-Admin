@@ -128,7 +128,7 @@ const SideBar = () => {
           <img
             src={FeaturedImage || "https://via.placeholder.com/150"}
             alt="English Healer"
-            className="h-24 ml-16 object-contain w-28"
+            className="h-24 lg:ml-16 ml-10 object-contain w-28"
           />
         </div>
       </Link>
