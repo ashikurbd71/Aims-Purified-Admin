@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import Avatar from "/Avatar.png";
 import ThemeToggle from "./ThemeToggle";
 import { Menu } from "lucide-react";
-import FeaturedImage from "/englishHealerLogo.png";
+import FeaturedImage from "../../../assets/logo-aims.jpg";
 import { Button } from "@/components/ui/button";
 // import { AuthContext } from "@/contexts/AuthContext";
 
