@@ -91,14 +91,16 @@ const CourseCard = ({ course, refetch, viewMode = "grid" }) => {
                 className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105"
               />
               <div className="absolute top-3 right-3 flex gap-2">
-                <Badge variant="secondary" className="bg-white/90 text-purple-700 shadow-sm">
+                <Badge variant="secondary" className="bg-white/90 text-[#1B5A3E]
+shadow-sm">
                   {item?.status === 'active' ? "Active" : item?.status === 'inactive' ? "Disabled" : "Draft"}
                 </Badge>
               </div>
             </div>
 
             <CardContent className="p-5">
-              <Link to={`/course/${item?.id}`} className="block group-hover:text-purple-700 transition-colors">
+              <Link to={`/course/${item?.id}`} className="block group-hover:text-[#1B5A3E]
+transition-colors">
                 <h2 className="text-xl font-bold line-clamp-1">{item?.name}</h2>
               </Link>
 
@@ -142,7 +144,8 @@ const CourseCard = ({ course, refetch, viewMode = "grid" }) => {
 
             <CardFooter className="px-5 py-4 bg-gray-50 flex justify-between items-center">
               <Link to={`/products-management/${item?.id}`}>
-                <Button variant="outline" size="sm" className="text-purple-700 border-purple-200 hover:bg-purple-50">
+                <Button variant="outline" size="sm" className="text-[#1B5A3E]
+border-purple-200 hover:bg-purple-50">
                   <Eye className="h-4 w-4 mr-1" />
                   View
                 </Button>
@@ -208,7 +211,8 @@ const CourseCard = ({ course, refetch, viewMode = "grid" }) => {
                 className="w-full h-full object-cover"
               />
               <div className="absolute top-3 right-3 flex gap-2">
-                <Badge variant="secondary" className="bg-white/90 text-purple-700 shadow-sm">
+                <Badge variant="secondary" className="bg-white/90 text-[#1B5A3E]
+shadow-sm">
                   {item?.status === 'active' ? "Active" : item?.status === 'inactive' ? "Disabled" : "Draft"}
                 </Badge>
               </div>
@@ -217,7 +221,8 @@ const CourseCard = ({ course, refetch, viewMode = "grid" }) => {
             <div className="flex-1 p-5">
               <div className="flex justify-between items-start">
                 <div>
-                  <Link to={`/product-management/${item?.id}`} className="block group-hover:text-purple-700 transition-colors">
+                  <Link to={`/product-management/${item?.id}`} className="block group-hover:text-[#1B5A3E]
+transition-colors">
                     <h2 className="text-xl font-bold">{item?.name}</h2>
                   </Link>
 
@@ -298,7 +303,8 @@ const CourseCard = ({ course, refetch, viewMode = "grid" }) => {
 
               <div className="flex gap-2 mt-4">
                 <Link to={`/course/${item?._id}`}>
-                  <Button variant="outline" size="sm" className="text-purple-700 border-purple-200 hover:bg-purple-50">
+                  <Button variant="outline" size="sm" className="text-[#1B5A3E]
+border-purple-200 hover:bg-purple-50">
                     <Eye className="h-4 w-4 mr-1" />
                     View
                   </Button>
