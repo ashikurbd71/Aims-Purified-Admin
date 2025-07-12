@@ -1,13 +1,12 @@
 import { Card, CardContent } from "@/components/ui/card";
-import useCouponData from "@/hooks/useCouponData";
-import useEnrollmentData from "@/hooks/useEnrollmentData";
+import useCouponData from "@/hooks/useCategoryData";
+import useEnrollmentData from "@/hooks/useOrderData";
 import CustomMetaTag from "@/components/global/CustomMetaTags";
-import User from "@/hooks/userData";
-import useSmsBalanceData from "@/hooks/useSmsBalanceData";
-import useStudentData from "@/hooks/useStudentData";
+// import User from "@/hooks/userData";
+
 import { Mail, Truck } from "lucide-react";
 import { Link } from "react-router-dom";
-import useShipmentData from "@/hooks/useShipmentData";
+
 
 const Home = () => {
   // Query state Management

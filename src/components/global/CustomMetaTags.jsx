@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 // Importing the PropTypes library for defining and validating the props passed to the component.
 import PropTypes from "prop-types";
 // Importing a default image from the assets directory to use as a fallback for the Open Graph image.
-import img from "@/assets/featuredImg.png";
+import img from "@/assets/logo-aims.jpg";
 
 /**
  * CustomMetaTag Component
@@ -22,14 +22,14 @@ const CustomMetaTag = ({ title, image, description }) => {
     // Helmet component for dynamically adding meta tags to the document head.
     <Helmet prioritizeSeoTags>
       {/* Set the page title dynamically. Includes "English Healer" as a prefix. */}
-      <title>{title ? `Aims Purefied | ${title}` : "English Healer"}</title>
+      <title>{title ? `Aims Purefied | ${title}` : "Aims Purefied"}</title>
 
       {/* Open Graph meta tags for better integration with social media platforms */}
       <meta
         property="og:title"
-        content={title ? `${title}` : "English Healer"}
+        content={title ? `${title}` : "Aims Purefied"}
       />
-      <meta property="og:site_name" content="English Healer" />
+      <meta property="og:site_name" content="Aims Purefied" />
       <meta property="og:type" content="website" />
 
       {/* Set the Open Graph image dynamically, with a fallback to a default image */}
@@ -48,7 +48,7 @@ const CustomMetaTag = ({ title, image, description }) => {
       <meta name="author" content="Farhan Sadiq" />
 
       {/* Meta tag for specifying the copyright holder */}
-      <meta name="copyright" content="English Healer" />
+      <meta name="copyright" content="Aims Purefied" />
     </Helmet>
   );
 };

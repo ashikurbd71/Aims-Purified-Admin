@@ -15,7 +15,7 @@
 // Importing required modules and components
 import PropTypes from "prop-types";
 import { Navigate, useLocation } from "react-router-dom";
-import useAuth from "@/hooks/useAuth";
+// import useAuth from "@/hooks/useAuth";
 import Loading from "@/components/global/Loading";
 import { useContext } from "react";
 import { AuthContext } from "@/contexts/AuthContext";

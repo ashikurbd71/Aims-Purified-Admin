@@ -17,9 +17,9 @@ const ProfileBar = ({ toggleSidebar }) => {
           alt="English Healer"
           className="h-16 object-contain w-16 mr-2 block md:hidden "
         />
-        <h1 className="text-sm md:text-xl font-bold hidden md:block">
+        {/* <h1 className="text-sm md:text-xl font-bold hidden md:block">
           Welcome Back, {user?.reloadUserInfo?.displayName}
-        </h1>
+        </h1> */}
       </div>
       <div className="flex  items-center gap-1 lg:gap-2">
         {/* <ThemeToggle /> */}

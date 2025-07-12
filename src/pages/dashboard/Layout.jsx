@@ -31,15 +31,15 @@ const Layout = () => {
           <p className="">
             &copy; {currentYear} {""}
             <a href="#" className="font-semibold underline" target="_blank">
-              English Healer {""}
+              Aims Purefied{""}
             </a>
             | All Rights Reserved |<span className=""> Developed by</span>{" "}
             <a
-              href="https://www.durdomcrafters.com"
+              href="https://www.innowavesolution.com"
               className="font-semibold underline"
               target="_blank"
             >
-              Team Durdom Crafters
+              InnoWave Solution
             </a>
           </p>
         </div>

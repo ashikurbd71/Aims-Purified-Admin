@@ -15,7 +15,7 @@
  */
 
 // Importing necessary modules and components for routing.
-import SignInPage from "@/pages/auth/signIn/SignIn";
+
 import DashboardHome from "@/pages/dashboard/home/Home";
 import DashboardLayout from "@/pages/dashboard/Layout";
 import { createBrowserRouter } from "react-router-dom";
@@ -25,42 +25,35 @@ import { PrivateRoutes, SignedInProtectedRoutes } from "./ProtectedRoutes";
 
 import TeamManage from "@/pages/dashboard/team/TeamManage";
 
-import AdmissionForm from "@/pages/dashboard/components/forms/admission/AdmissionForm";
-import AdmissionUpdate from "@/pages/dashboard/components/update/forms/admission/AdmissionUpdate";
 
 import MemberDetails from "@/pages/dashboard/team/components/MemberDetails";
 
 
 import Profile from "@/pages/dashboard/team/components/Profile";
 
-import SubjectChapter from "@/pages/dashboard/course/class/components/SubjectChapter";
-import NotFoundPage from "@/components/global/NotFound";
-import StudentReview from "@/pages/dashboard/student-review/StudentReview";
-import BookList from "@/pages/dashboard/Book/BookList";
-import ShipmentList from "@/pages/dashboard/Shipment/ShipmentList";
-import ViewClass from "@/pages/dashboard/course/class/components/ViewClass";
+
 import CategoryManagement from "@/pages/dashboard/category/CategoryManagement";
 import ProductsManagement from "@/pages/dashboard/course/ProductsManagement";
-import ProductSetting from "@/pages/dashboard/components/forms/course/ProductSetting";
+import ProductSetting from "@/pages/dashboard/components/forms/products/ProductSetting";
 
 
 // Define the routing structure using `createBrowserRouter`.
 const Router = createBrowserRouter([
-  {
-    /**
-     * Public Route - Sign In Page
-     *
-     * Path: "/sign-in"
-     * This route is protected by `SignedInProtectedRoutes` to prevent access for already signed-in users.
-     * Renders the `SignInPage` component.
-     */
-    path: "/sign-in",
-    element: (
-      <SignedInProtectedRoutes>
-        <SignInPage />
-      </SignedInProtectedRoutes>
-    ),
-  },
+  // {
+  //   /**
+  //    * Public Route - Sign In Page
+  //    *
+  //    * Path: "/sign-in"
+  //    * This route is protected by `SignedInProtectedRoutes` to prevent access for already signed-in users.
+  //    * Renders the `SignInPage` component.
+  //    */
+  //   path: "/sign-in",
+  //   element: (
+  //     <SignedInProtectedRoutes>
+  //       <SignInPage />
+  //     </SignedInProtectedRoutes>
+  //   ),
+  // },
   {
     /**
      * Private Route - Dashboard
@@ -113,14 +106,14 @@ const Router = createBrowserRouter([
 
 
 
-      {
-        path: "/team",
-        element: (
-          <PrivateRoutes>
-            <TeamManage />
-          </PrivateRoutes>
-        ),
-      },
+      // {
+      //   path: "/team",
+      //   element: (
+      //     <PrivateRoutes>
+      //       <TeamManage />
+      //     </PrivateRoutes>
+      //   ),
+      // },
 
       {
         path: "/",
@@ -133,85 +126,45 @@ const Router = createBrowserRouter([
       // course details
 
 
-      {
-        path: "/subject-chapter/:id",
-        element: (
-          <PrivateRoutes>
-            <SubjectChapter />
-          </PrivateRoutes>
-        ),
-      },
+
       // admission routs
-      {
-        path: "/admission-form",
-        element: (
-          <PrivateRoutes>
-            <AdmissionForm />
-          </PrivateRoutes>
-        ),
-      },
-
-      {
-        path: "/shipments",
-        element: (
-          <PrivateRoutes>
-            <ShipmentList />
-          </PrivateRoutes>
-        ),
-      },
-      {
-        path: "/view-class/:id",
-        element: (
-          <PrivateRoutes>
-            <ViewClass />
-          </PrivateRoutes>
-        ),
-      },
 
 
-      // ViewClass
-      {
-        path: "/admissionUpdate-form/:id",
-        element: <AdmissionUpdate />,
-      },
-
-      // member details
-      {
-        path: "/member-details/:id",
-        element: (
-          <PrivateRoutes>
-            <MemberDetails />
-          </PrivateRoutes>
-        ),
-      },
-      {
-        path: "/profile",
-        element: (
-          <PrivateRoutes>
-            <Profile />
-          </PrivateRoutes>
-        ),
-      },
-
-      {
-        path: "/book",
-        element: (
-          <PrivateRoutes>
-            <BookList />
-          </PrivateRoutes>
-        ),
-      },
+      // {
+      //   path: "/shipments",
+      //   element: (
+      //     <PrivateRoutes>
+      //       <ShipmentList />
+      //     </PrivateRoutes>
+      //   ),
+      // },
 
 
 
-      {
-        path: "student-review",
-        element: (
-          <PrivateRoutes>
-            <StudentReview />
-          </PrivateRoutes>
-        ),
-      },
+
+
+      // // member details
+      // {
+      //   path: "/member-details/:id",
+      //   element: (
+      //     <PrivateRoutes>
+      //       <MemberDetails />
+      //     </PrivateRoutes>
+      //   ),
+      // },
+      // {
+      //   path: "/profile",
+      //   element: (
+      //     <PrivateRoutes>
+      //       <Profile />
+      //     </PrivateRoutes>
+      //   ),
+      // },
+
+
+
+
+
 
 
     ],

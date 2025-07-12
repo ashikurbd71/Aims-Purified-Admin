@@ -39,7 +39,7 @@ import { AuthContext } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import Loading from "@/components/global/Loading";
 import CustomMetaTag from "@/components/global/CustomMetaTags";
-import CategoryUpdate from "../components/update/forms/coupon/CouponUpdate";
+import CategoryUpdate from "../components/update/forms/categories/CategoryUpdate";
 
 
 const CategoryManagement = () => {

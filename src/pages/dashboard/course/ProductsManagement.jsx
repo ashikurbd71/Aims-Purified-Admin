@@ -31,12 +31,12 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import CourseCard from "./components/CourseCard"; // Assuming CourseCard is used for products
+import CourseCard from "./components/ProductCard"; // Assuming CourseCard is used for products
 
-import User from "@/hooks/userData";
-import useCourseData from "@/hooks/useCourseData"; // Assuming this hook fetches product data
+// import User from "@/hooks/userData";
+import useCourseData from "@/hooks/useProductData"; // Assuming this hook fetches product data
 import CustomMetaTag from "@/components/global/CustomMetaTags";
-import ProductCreateForm from "../components/forms/course/ProductCreateForm";
+import ProductCreateForm from "../components/forms/products/ProductCreateForm";
 
 const ProductsManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -50,7 +50,7 @@ const ProductsManagement = () => {
 
   // Fetch product data (assuming useCourseData fetches products)
   const [courseData, courseDataRefetch] = useCourseData();
-  const { userData } = User();
+  // const { userData } = User();
 
   // Dynamically get unique categories from the fetched product data
   // Ensures that your category filter always reflects available categories
