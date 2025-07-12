@@ -99,7 +99,7 @@ shadow-sm">
             </div>
 
             <CardContent className="p-5">
-              <Link to={`/course/${item?.id}`} className="block group-hover:text-[#1B5A3E]
+              <Link to={`/products-management/${item?.id}`} className="block group-hover:text-[#1B5A3E]
 transition-colors">
                 <h2 className="text-xl font-bold line-clamp-1">{item?.name}</h2>
               </Link>
@@ -221,7 +221,7 @@ shadow-sm">
             <div className="flex-1 p-5">
               <div className="flex justify-between items-start">
                 <div>
-                  <Link to={`/product-management/${item?.id}`} className="block group-hover:text-[#1B5A3E]
+                  <Link to={`/products-management/${item?.id}`} className="block group-hover:text-[#1B5A3E]
 transition-colors">
                     <h2 className="text-xl font-bold">{item?.name}</h2>
                   </Link>
@@ -249,7 +249,7 @@ transition-colors">
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem asChild>
-                        <Link to={`/products-management/${item?._id}`} className="cursor-pointer">
+                        <Link to={`/products-management/${item?.id}`} className="cursor-pointer">
                           <Eye className="h-4 w-4 mr-2" />
                           View Course
                         </Link>
@@ -302,7 +302,7 @@ transition-colors">
 
 
               <div className="flex gap-2 mt-4">
-                <Link to={`/course/${item?._id}`}>
+                <Link to={`/products-management/${item?.id}`}>
                   <Button variant="outline" size="sm" className="text-[#1B5A3E]
 border-purple-200 hover:bg-purple-50">
                     <Eye className="h-4 w-4 mr-1" />
