@@ -18,7 +18,7 @@ import { Navigate, useLocation } from "react-router-dom";
 // import useAuth from "@/hooks/useAuth";
 import Loading from "@/components/global/Loading";
 import { useContext } from "react";
-import { AuthContext } from "@/contexts/AuthContext";
+// import { AuthContext } from "@/contexts/AuthContext";
 
 // Private Route Component
 /**
@@ -41,18 +41,18 @@ import { AuthContext } from "@/contexts/AuthContext";
  */
 export const PrivateRoutes = ({ children }) => {
 
-  const { user, loading } = useContext(AuthContext);
+  // const { user, loading } = useContext(AuthContext);
   const location = useLocation(); // Capture the current location for redirection
 
   // Show loading spinner if authentication status is being determined
-  if (loading) {
-    return <Loading />;
-  }
+  // if (loading) {
+  //   return <Loading />;
+  // }
 
   // Render the children if the user is authenticated
-  if (user) {
-    return <div>{children}</div>;
-  }
+  // if (user) {
+  //   return <div>{children}</div>;
+  // }
 
   // Redirect to sign-in if not authenticated
   // return <Navigate to={"/sign-in"} state={{ from: location }} replace />;
@@ -82,12 +82,12 @@ PrivateRoutes.propTypes = {
  * Wrap any route or component intended for unauthenticated users with `SignedInProtectedRoutes`.
  */
 export const SignedInProtectedRoutes = ({ children }) => {
-  const { user, } = useContext(AuthContext);
+  // const { user, } = useContext(AuthContext);
 
   // Render the children if the user is not authenticated
-  if (!user) {
-    return <div>{children}</div>;
-  }
+  // if (!user) {
+  //   return <div>{children}</div>;
+  // }
 
   // Redirect to the home page if authenticated
   return <Navigate to={"/"} />;

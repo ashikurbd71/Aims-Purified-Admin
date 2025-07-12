@@ -3,11 +3,11 @@ import CustomMetaTag from "@/components/global/CustomMetaTags";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import useAxiosSecure from "@/hooks/useAxiosSecure";
-import { AuthContext } from "@/contexts/AuthContext";
+// import { AuthContext } from "@/contexts/AuthContext";
 import Avatar from "/male.png";
 
 const MemberDetails = () => {
-  const { authdata } = useContext(AuthContext);
+  // const { authdata } = useContext(AuthContext);
   const teamId = useParams();
   const axiosSecure = useAxiosSecure()
   const { data: item, refetch } = useQuery({

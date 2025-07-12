@@ -10,7 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import useAxiosSecure from "@/hooks/useAxiosSecure";
 import { toast } from "sonner";
 import axios from "axios";
-import { AuthContext } from "@/contexts/AuthContext";
+// import { AuthContext } from "@/contexts/AuthContext";
 import { Textarea } from "@/components/ui/textarea";
 import { useNavigate } from "react-router-dom";
 import ButtonLoader from "@/components/global/ButtonLoader";

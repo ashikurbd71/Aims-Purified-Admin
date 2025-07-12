@@ -23,7 +23,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { AuthContext } from "@/contexts/AuthContext";
+// import { AuthContext } from "@/contexts/AuthContext";
 import useAxiosSecure from "@/hooks/useAxiosSecure";
 import { toast } from "sonner";
 import "./sideBar.css";
@@ -106,7 +106,7 @@ const SideBar = () => {
   };
 
   const location = useLocation();
-  const { user, authdata } = useContext(AuthContext);
+  // const { user, authdata } = useContext(AuthContext);
   // const { data: items } = useQuery({
   //   queryKey: ["singleteamManagement"],
   //   queryFn: async () => {
@@ -176,17 +176,17 @@ const SideBar = () => {
           <Link to={"/profile"}>
             <div className="w-10 h-10 rounded-full">
               <img
-                src={authdata?.photoURL || Avatar}
+                src={Avatar}
                 alt="User"
                 className="w-10 h-10 rounded-full"
               />
             </div>
           </Link>
 
-          <div className="break-all pr-2">
+          {/* <div className="break-all pr-2">
             <h4 className="text-sm lg:text-base font-bold">{authdata?.name}</h4>
             <p className="text-xs text-gray-500">{authdata?.email}</p>
-          </div>
+          </div> */}
         </div>
 
         {/* Logout  */}

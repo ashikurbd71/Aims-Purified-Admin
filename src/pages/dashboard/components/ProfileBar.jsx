@@ -4,10 +4,10 @@ import ThemeToggle from "./ThemeToggle";
 import { Menu } from "lucide-react";
 import FeaturedImage from "/englishHealerLogo.png";
 import { Button } from "@/components/ui/button";
-import { AuthContext } from "@/contexts/AuthContext";
+// import { AuthContext } from "@/contexts/AuthContext";
 
 const ProfileBar = ({ toggleSidebar }) => {
-  const { user } = useContext(AuthContext);
+  // const { user } = useContext(AuthContext);
 
   return (
     <div className="w-full border-b h-12 md:h-24 flex items-center justify-between py-8 px-2 lg:p-8 ">

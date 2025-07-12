@@ -35,7 +35,7 @@ import CouponCreateForm from "./CategoryCreateForm";
 import { useQuery } from "@tanstack/react-query";
 import useAxiosSecure from "@/hooks/useAxiosSecure";
 
-import { AuthContext } from "@/contexts/AuthContext";
+// import { AuthContext } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import Loading from "@/components/global/Loading";
 import CustomMetaTag from "@/components/global/CustomMetaTags";
@@ -106,7 +106,7 @@ const CategoryManagement = () => {
       setIsDeleting(false);
     }
   };
-  const { authdata } = useContext(AuthContext);
+  // const { authdata } = useContext(AuthContext);
 
   (item);
   return (

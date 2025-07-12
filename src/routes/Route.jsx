@@ -16,20 +16,16 @@
 
 // Importing necessary modules and components for routing.
 
-import DashboardHome from "@/pages/dashboard/home/Home";
+// import DashboardHome from "@/pages/dashboard/home/Home";
 import DashboardLayout from "@/pages/dashboard/Layout";
 import { createBrowserRouter } from "react-router-dom";
-import { PrivateRoutes, SignedInProtectedRoutes } from "./ProtectedRoutes";
+// import { PrivateRoutes, SignedInProtectedRoutes } from "./ProtectedRoutes";
+
+
+;
 
 
 
-import TeamManage from "@/pages/dashboard/team/TeamManage";
-
-
-import MemberDetails from "@/pages/dashboard/team/components/MemberDetails";
-
-
-import Profile from "@/pages/dashboard/team/components/Profile";
 
 
 import CategoryManagement from "@/pages/dashboard/category/CategoryManagement";
