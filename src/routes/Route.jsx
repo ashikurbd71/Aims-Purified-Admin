@@ -31,6 +31,7 @@ import { createBrowserRouter } from "react-router-dom";
 import CategoryManagement from "@/pages/dashboard/category/CategoryManagement";
 import ProductsManagement from "@/pages/dashboard/course/ProductsManagement";
 import ProductSetting from "@/pages/dashboard/components/forms/products/ProductSetting";
+import OrderList from "@/pages/dashboard/Order/OrderList";
 
 
 // Define the routing structure using `createBrowserRouter`.
@@ -126,14 +127,14 @@ const Router = createBrowserRouter([
       // admission routs
 
 
-      // {
-      //   path: "/shipments",
-      //   element: (
-      //     <PrivateRoutes>
-      //       <ShipmentList />
-      //     </PrivateRoutes>
-      //   ),
-      // },
+      {
+        path: "/order-management",
+        element: (
+
+          <OrderList />
+
+        ),
+      },
 
 
 

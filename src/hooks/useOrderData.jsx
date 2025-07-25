@@ -1,13 +1,15 @@
 import useAxiosSecure from "@/hooks/useAxiosSecure";
 import { useQuery } from "@tanstack/react-query";
 
-const useEnrollmentData = () => {
+const useOrderData = () => {
   const axiosSecure = useAxiosSecure();
-  const { data: enrollmentData = [], refetch: enrollmentRefetch } = useQuery({
-    queryKey: ["enrollmentManagement"],
+  const { data: orderData = [], refetch: orderRefetch } = useQuery({
+    queryKey: ["orderManagement"],
     queryFn: async () => {
-      const res = await axiosSecure.get(`/enrollment`);
-      return res.data.data;
+      const res = await axiosSecure.get(`/orders`);
+
+      console.log()
+      return res?.data?.data; // ✅ Return only the data part
     },
     staleTime: Infinity,
     cacheTime: Infinity,
@@ -17,7 +19,7 @@ const useEnrollmentData = () => {
     retry: false,
   });
 
-  return [enrollmentData, enrollmentRefetch];
+  return [orderData, orderRefetch];
 };
 
-export default useEnrollmentData;
+export default useOrderData;

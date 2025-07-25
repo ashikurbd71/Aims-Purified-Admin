@@ -19,6 +19,7 @@ import {
   FolderKanban,
   List,
   LogOut,
+  ShoppingCart,
   Star,
   UsersRound,
 } from "lucide-react";
@@ -73,11 +74,11 @@ const NAVIGATION_ITEMS = [
 
 
 
-  // {
-  //   to: "/order-management",
-  //   icon: <CalendarDays />,
-  //   label: "Orders Management",
-  // },
+  {
+    to: "/order-management",
+    icon: <ShoppingCart />,
+    label: "Orders Management",
+  },
 
 
 
