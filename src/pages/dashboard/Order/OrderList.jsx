@@ -39,6 +39,7 @@ import {
 import useAxiosSecure from "@/hooks/useAxiosSecure";
 // import User from "@/hooks/userData";
 import CustomMetaTag from "@/components/global/CustomMetaTags";
+import ButtonLoader from "@/components/global/ButtonLoader";
 import useOrderData from "@/hooks/useOrderData"; // Assuming this now fetches the JSON structure
 
 const OrderList = () => {
@@ -54,6 +55,13 @@ const OrderList = () => {
     const [selectedType, setSelectedType] = useState("ALL"); // Possible types: "ALL", "BOOKS", "GIFTS", "BOOKS_AND_GIFTS", "OTHER"
     const [selectedStatus, setSelectedStatus] = useState("ALL");
     const [selectedProductIds, setSelectedProductIds] = useState([]); // To filter by specific product IDs if they are books
+
+    // Loading states for buttons
+    const [loadingStates, setLoadingStates] = useState({
+        markAsShipped: {},
+        cancelOrder: {},
+        reviewTransaction: {},
+    });
 
     const axiosSecure = useAxiosSecure();
     // const { userData } = User();
@@ -287,6 +295,12 @@ const OrderList = () => {
 
 
     const handleMarkAsShipped = async (orderId) => {
+        // Set loading state for this specific order
+        setLoadingStates(prev => ({
+            ...prev,
+            markAsShipped: { ...prev.markAsShipped, [orderId.id]: true }
+        }));
+
         try {
             const response = await axiosSecure.patch(`/orders/order-status/${orderId?.id}`, {
                 status: "shipped",
@@ -304,10 +318,22 @@ const OrderList = () => {
                 "An error occurred while updating order status."
             );
             console.error("Error updating order:", error);
+        } finally {
+            // Clear loading state
+            setLoadingStates(prev => ({
+                ...prev,
+                markAsShipped: { ...prev.markAsShipped, [orderId.id]: false }
+            }));
         }
     };
 
     const handleCancelOrder = async (orderId) => {
+        // Set loading state for this specific order
+        setLoadingStates(prev => ({
+            ...prev,
+            cancelOrder: { ...prev.cancelOrder, [orderId]: true }
+        }));
+
         try {
             const response = await axiosSecure.delete(`/orders/${orderId}`, {
                 status: "cancel",
@@ -324,10 +350,22 @@ const OrderList = () => {
                 "An error occurred while cancelling order."
             );
             console.error("Error cancelling order:", error);
+        } finally {
+            // Clear loading state
+            setLoadingStates(prev => ({
+                ...prev,
+                cancelOrder: { ...prev.cancelOrder, [orderId]: false }
+            }));
         }
     };
 
     const handleReviewTransaction = async (orderId) => {
+        // Set loading state for this specific order
+        setLoadingStates(prev => ({
+            ...prev,
+            reviewTransaction: { ...prev.reviewTransaction, [orderId]: true }
+        }));
+
         try {
             const response = await axiosSecure.patch(`/orders/payment-status/${orderId}`, {
                 paymentStatus: "Received", // or whatever status you want to set
@@ -344,6 +382,12 @@ const OrderList = () => {
                 "An error occurred while reviewing transaction."
             );
             console.error("Error reviewing transaction:", error);
+        } finally {
+            // Clear loading state
+            setLoadingStates(prev => ({
+                ...prev,
+                reviewTransaction: { ...prev.reviewTransaction, [orderId]: false }
+            }));
         }
     };
 
@@ -713,24 +757,39 @@ const OrderList = () => {
                                             <Button
                                                 onClick={() => handleMarkAsShipped(order)}
                                                 className="bg-blue-600 hover:bg-blue-700"
+                                                disabled={loadingStates.markAsShipped[order.id]}
                                             >
-                                                Mark as Shipped
+                                                {loadingStates.markAsShipped[order.id] ? (
+                                                    <ButtonLoader />
+                                                ) : (
+                                                    "Mark as Shipped"
+                                                )}
                                             </Button>
                                         )}
-                                        {(order.status === "pending" || order.status === "shipment") && (
+                                        {(order.status === "pending" || order.status === "shipped") && (
                                             <Button
                                                 onClick={() => handleCancelOrder(order.id)}
                                                 className="bg-red-600 hover:bg-red-700"
+                                                disabled={loadingStates.cancelOrder[order.id]}
                                             >
-                                                Cancel Order
+                                                {loadingStates.cancelOrder[order.id] ? (
+                                                    <ButtonLoader />
+                                                ) : (
+                                                    "Cancel Order"
+                                                )}
                                             </Button>
                                         )}
                                         {order.Paymentstatus === "Review" && (
                                             <Button
                                                 onClick={() => handleReviewTransaction(order.id)}
                                                 className="bg-yellow-600 hover:bg-yellow-700"
+                                                disabled={loadingStates.reviewTransaction[order.id]}
                                             >
-                                                Review Transaction
+                                                {loadingStates.reviewTransaction[order.id] ? (
+                                                    <ButtonLoader />
+                                                ) : (
+                                                    "Review Transaction"
+                                                )}
                                             </Button>
                                         )}
                                     </div>
