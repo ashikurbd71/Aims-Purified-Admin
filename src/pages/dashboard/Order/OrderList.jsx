@@ -646,7 +646,7 @@ const OrderList = () => {
                                             </div>
 
                                             <div className="flex items-center gap-2">
-                                                <span>Total Due: {order.totalDue}৳</span>
+                                                <span>Total Due: </span> <span>Full</span>
                                             </div>
                                             {order.paymentMethod && (
                                                 <div className="flex items-center gap-2">
