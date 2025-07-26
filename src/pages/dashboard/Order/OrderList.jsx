@@ -30,6 +30,9 @@ import {
     Gift,
     Package,
     Shirt,
+    Clock,
+    Truck,
+    Eye,
 } from "lucide-react";
 
 
@@ -50,7 +53,7 @@ const OrderList = () => {
     // Filter states
     const [selectedType, setSelectedType] = useState("ALL"); // Possible types: "ALL", "BOOKS", "GIFTS", "BOOKS_AND_GIFTS", "OTHER"
     const [selectedStatus, setSelectedStatus] = useState("ALL");
-    const [selectedBookProductIds, setSelectedBookProductIds] = useState([]); // To filter by specific product IDs if they are books
+    const [selectedProductIds, setSelectedProductIds] = useState([]); // To filter by specific product IDs if they are books
 
     const axiosSecure = useAxiosSecure();
     // const { userData } = User();
@@ -58,41 +61,47 @@ const OrderList = () => {
 
 
     // State to hold unique "book" products for filtering checkboxes
-    const [uniqueBookProducts, setUniqueBookProducts] = useState([]);
+    const [uniqueProducts, setUniqueProducts] = useState([]);
+
+    // Calculate summary counts
+    const getSummaryCounts = () => {
+        if (!orderData) return { pending: 0, shipment: 0, review: 0 };
+
+        return {
+            pending: orderData.filter(order => order.status?.toLowerCase() === "pending").length,
+            shipment: orderData.filter(order => order.status?.toLowerCase() === "shipped").length,
+            review: orderData.filter(order => order.Paymentstatus?.toLowerCase() === "review").length,
+        };
+    };
+
+    const summaryCounts = getSummaryCounts();
 
     // --- Helper Functions to infer data from the new JSON structure ---
 
     // Function to determine order type based on products
     const getOrderType = (products) => {
-        let hasBooks = false;
-        let hasGifts = false; // Assuming gifts are things like T-shirts
+        let hasShataranji = false;
+        let hasChira = false;
+        let hasAchar = false;
 
         for (const product of products) {
             const productName = product.name?.toLowerCase() || "";
-            const productDescription = product.description?.toLowerCase() || "";
 
-            // Simple heuristic to detect books
-            if (productName.includes("book") || productName.includes("বই")) {
-                hasBooks = true;
+            if (productName.includes("শতরঞ্জি")) {
+                hasShataranji = true;
             }
-
-            // Simple heuristic to detect gifts (e.g., t-shirts)
-            if (
-                productName.includes("t-shirt") ||
-                productName.includes("shirt") ||
-                productName.includes("gift") ||
-                productDescription.includes("t-shirt") ||
-                productDescription.includes("shirt") ||
-                productDescription.includes("gift")
-            ) {
-                hasGifts = true;
+            if (productName.includes("বাদামি চিড়া")) {
+                hasChira = true;
+            }
+            if (productName.includes("বরই আচার")) {
+                hasAchar = true;
             }
         }
 
-        if (hasBooks && hasGifts) return "BOOKS_AND_GIFTS";
-        if (hasBooks) return "BOOKS";
-        if (hasGifts) return "GIFTS";
-        return "OTHER"; // Default for orders with other types of products
+        if (hasShataranji) return "শতরঞ্জি";
+        if (hasChira) return "বাদামি চিড়া";
+        if (hasAchar) return "বরই আচার";
+        return "OTHER";
     };
 
     // Function to extract t-shirt size (if available in product description/name)
@@ -117,17 +126,14 @@ const OrderList = () => {
     // Determine unique book products for filtering checkboxes
     useEffect(() => {
         if (orderData) {
-            const books = new Set();
+            const products = new Set();
             orderData.forEach(order => {
                 order.products.forEach(product => {
-                    const productName = product.name?.toLowerCase() || "";
-                    if (productName.includes("book") || productName.includes("বই")) {
-                        // Store product ID and name to display in checkbox
-                        books.add(JSON.stringify({ _id: product.id, name: product.name }));
-                    }
+                    // Store product ID and name to display in checkbox
+                    products.add(JSON.stringify({ _id: product.id, name: product.name }));
                 });
             });
-            setUniqueBookProducts(Array.from(books).map(item => JSON.parse(item)));
+            setUniqueProducts(Array.from(products).map(item => JSON.parse(item)));
         }
     }, [orderData]);
 
@@ -168,32 +174,32 @@ const OrderList = () => {
             );
         }
 
-        // Apply Book Filter
-        if (selectedBookProductIds.length > 0) {
+        // Apply Product Filter
+        if (selectedProductIds.length > 0) {
             currentFilteredOrders = currentFilteredOrders.filter(order =>
-                order.products.some(product => selectedBookProductIds.includes(product.id))
+                order.products.some(product => selectedProductIds.includes(product.id))
             );
         }
 
         setFilteredOrders(currentFilteredOrders);
-    }, [orderData, searchQuery, selectedType, selectedStatus, selectedBookProductIds]);
+    }, [orderData, searchQuery, selectedType, selectedStatus, selectedProductIds]);
 
 
     // Handle delivery status update (adjusted to match JSON's 'status' field)
-    const handleUpdateDelivery = async (orderId) => {
+    const handleUpdateDelivery = async (orderId, newStatus = "delivered") => {
         try {
             // Note: Your JSON has 'status' as a string "pending", "delivered"
             // The API patch might need to send "delivered" lowercase or "DELIVERED" uppercase.
             // Adjust payload as per your backend API's expectation.
             const response = await axiosSecure.patch(`/orders/${orderId}`, {
-                status: "delivered", // Changed from "DELIVERED" to "delivered" as per JSON example
+                status: newStatus,
                 // Assuming your backend expects 'riderName' to update who delivered it
                 // riderName: userData?.name,
             });
 
             if (response.status === 200) {
                 toast.success("Order status updated successfully!");
-                enrollmentRefetch(); // Corrected function name
+                orderRefetch(); // Corrected function name
             } else {
                 toast.error("Failed to update order status.");
             }
@@ -206,13 +212,13 @@ const OrderList = () => {
         }
     };
 
-    // Handle book selection for filtering
-    const handleBookSelection = (bookProductId) => {
-        setSelectedBookProductIds((prevSelected) => {
-            if (prevSelected.includes(bookProductId)) {
-                return prevSelected.filter((id) => id !== bookProductId);
+    // Handle product selection for filtering
+    const handleProductSelection = (productId) => {
+        setSelectedProductIds((prevSelected) => {
+            if (prevSelected.includes(productId)) {
+                return prevSelected.filter((id) => id !== productId);
             } else {
-                return [...prevSelected, bookProductId];
+                return [...prevSelected, productId];
             }
         });
     };
@@ -225,11 +231,7 @@ const OrderList = () => {
             const tShirtSize = getTShirtSize(order.products);
 
             // Filter products that are likely books for the "Books Ordered" column
-            const bookNames = order.products
-                .filter(product => {
-                    const productName = product.name?.toLowerCase() || "";
-                    return productName.includes("book") || productName.includes("বই");
-                })
+            const productNames = order.products
                 .map(product => product.name)
                 .join(", ");
 
@@ -250,9 +252,7 @@ const OrderList = () => {
                 "Customer Email": order.user?.email || "N/A",
                 "Customer Phone": order.customerPhone || "N/A",
                 "Total Amount": order.totalAmount || "N/A",
-                "Order Type": orderType,
-                "T-Shirt Size": tShirtSize || "N/A",
-                "Books Ordered": bookNames || "N/A",
+
                 "Other Products": otherProductNames || "N/A",
                 "Order Status": order.status || "N/A",
                 "Payment Status": order.Paymentstatus || "N/A", // Corrected typo from Paymentstatus
@@ -284,15 +284,121 @@ const OrderList = () => {
         toast.success("Export successful!");
     };
 
+
+
+    const handleMarkAsShipped = async (orderId) => {
+        try {
+            const response = await axiosSecure.patch(`/orders/order-status/${orderId?.id}`, {
+                status: "shipped",
+                totalDue: orderId?.totalDue,
+            });
+            if (response.status === 200) {
+                toast.success("Order marked as shipped successfully!");
+                orderRefetch();
+            } else {
+                toast.error("Failed to update order status.");
+            }
+        } catch (error) {
+            toast.error(
+                error.response?.data?.message ||
+                "An error occurred while updating order status."
+            );
+            console.error("Error updating order:", error);
+        }
+    };
+
+    const handleCancelOrder = async (orderId) => {
+        try {
+            const response = await axiosSecure.delete(`/orders/${orderId}`, {
+                status: "cancel",
+            });
+            if (response.status === 200) {
+                toast.success("Order cancelled successfully!");
+                orderRefetch();
+            } else {
+                toast.error("Failed to cancel order.");
+            }
+        } catch (error) {
+            toast.error(
+                error.response?.data?.message ||
+                "An error occurred while cancelling order."
+            );
+            console.error("Error cancelling order:", error);
+        }
+    };
+
+    const handleReviewTransaction = async (orderId) => {
+        try {
+            const response = await axiosSecure.patch(`/orders/payment-status/${orderId}`, {
+                paymentStatus: "Received", // or whatever status you want to set
+            });
+            if (response.status === 200) {
+                toast.success("Transaction reviewed successfully!");
+                orderRefetch();
+            } else {
+                toast.error("Failed to review transaction.");
+            }
+        } catch (error) {
+            toast.error(
+                error.response?.data?.message ||
+                "An error occurred while reviewing transaction."
+            );
+            console.error("Error reviewing transaction:", error);
+        }
+    };
+
     return (
         <div className="container mx-auto px-4 py-6">
             <CustomMetaTag title="Order Management" />
+
 
             <div className="mb-6">
                 <h1 className="text-2xl font-bold mb-2">Order Management</h1>
                 <p className="text-gray-600">
                     Manage and track all customer orders
                 </p>
+            </div>
+
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                {/* Pending Orders */}
+                <Card className="p-4 border-l-4 border-l-amber-500">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm font-medium text-gray-600">Pending Orders</p>
+                            <p className="text-2xl font-bold text-amber-600">{summaryCounts.pending}</p>
+                        </div>
+                        <div className="p-3 bg-amber-100 rounded-full">
+                            <Clock className="h-6 w-6 text-amber-600" />
+                        </div>
+                    </div>
+                </Card>
+
+                {/* Shipment Orders */}
+                <Card className="p-4 border-l-4 border-l-blue-500">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm font-medium text-gray-600">In Shipment</p>
+                            <p className="text-2xl font-bold text-blue-600">{summaryCounts.shipment}</p>
+                        </div>
+                        <div className="p-3 bg-blue-100 rounded-full">
+                            <Truck className="h-6 w-6 text-blue-600" />
+                        </div>
+                    </div>
+                </Card>
+
+                {/* Review Transactions */}
+                <Card className="p-4 border-l-4 border-l-yellow-500">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm font-medium text-gray-600">Review Transactions</p>
+                            <p className="text-2xl font-bold text-yellow-600">{summaryCounts.review}</p>
+                        </div>
+                        <div className="p-3 bg-yellow-100 rounded-full">
+                            <Eye className="h-6 w-6 text-yellow-600" />
+                        </div>
+                    </div>
+                </Card>
             </div>
 
             <Card className="p-6 mb-6">
@@ -324,10 +430,10 @@ const OrderList = () => {
                                 className="h-10 px-3 py-2 rounded-md border border-input bg-background text-sm"
                             >
                                 <option value="ALL">All Types</option>
-                                <option value="GIFTS">Only Gifts</option>
-                                <option value="BOOKS">Only Books</option>
-                                <option value="BOOKS_AND_GIFTS">Books & Gifts</option>
-                                <option value="OTHER">Other Products</option> {/* Added for clarity */}
+                                <option value="শতরঞ্জি">শতরঞ্জি</option>
+                                <option value="বাদামি চিড়া">বাদামি চিড়া</option>
+                                <option value="বরই আচার">বরই আচার</option>
+                                <option value="OTHER">অন্যান্য</option> {/* Added for clarity */}
                             </select>
                         </div>
 
@@ -347,7 +453,9 @@ const OrderList = () => {
                             >
                                 <option value="ALL">All Status</option>
                                 <option value="pending">Pending</option> {/* Adjusted to lowercase as per JSON */}
-                                <option value="delivered">Delivered</option> {/* Adjusted to lowercase as per JSON */}
+                                <option value="shipped">shipped</option>
+
+
                             </select>
                         </div>
 
@@ -365,28 +473,29 @@ const OrderList = () => {
                     </div>
                 </div>
 
-                {/* Book Product Filters (renamed from Book Filters) */}
+                {/* Product Filters (renamed from Book Filters) */}
                 {/* Only show if type includes books OR ALL is selected, AND there are actually unique book products */}
-                {(selectedType === "BOOKS" ||
-                    selectedType === "BOOKS_AND_GIFTS" ||
-                    selectedType === "ALL") && uniqueBookProducts.length > 0 && (
+                {(selectedType === "শতরঞ্জি" ||
+                    selectedType === "বাদামি চিড়া" ||
+                    selectedType === "বরই আচার" ||
+                    selectedType === "ALL") && uniqueProducts.length > 0 && (
                         <div className="mb-6">
                             <Label className="text-sm font-medium mb-2 block">
-                                Filter by Specific Books
+                                Filter by Specific Products
                             </Label>
                             <div className="flex flex-wrap gap-2">
-                                {uniqueBookProducts.map((book) => (
-                                    <div key={book._id} className="flex items-center space-x-2">
+                                {uniqueProducts.map((product) => (
+                                    <div key={product._id} className="flex items-center space-x-2">
                                         <Checkbox
-                                            id={`book-filter-${book._id}`}
-                                            checked={selectedBookProductIds.includes(book._id)}
-                                            onCheckedChange={() => handleBookSelection(book._id)}
+                                            id={`product-filter-${product._id}`}
+                                            checked={selectedProductIds.includes(product._id)}
+                                            onCheckedChange={() => handleProductSelection(product._id)}
                                         />
                                         <label
-                                            htmlFor={`book-filter-${book._id}`}
+                                            htmlFor={`product-filter-${product._id}`}
                                             className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                                         >
-                                            {book.name}
+                                            {product.name}
                                         </label>
                                     </div>
                                 ))}
@@ -436,6 +545,37 @@ const OrderList = () => {
                                 </AccordionTrigger>
 
                                 <AccordionContent className="px-4 pb-4">
+                                    {/* Individual card notifications based on status */}
+                                    {order.status === "pending" && (
+                                        <div className="mb-4 p-3 bg-red-100 border-l-4 border-red-500 text-red-700 rounded-r font-semibold flex items-center gap-2">
+                                            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                                            Urgent: Please review this order immediately
+                                        </div>
+                                    )}
+
+                                    {order.status === "shipment" && (
+                                        <div className="mb-4 p-3 bg-blue-100 border-l-4 border-blue-500 text-blue-700 rounded-r font-semibold flex items-center gap-2">
+                                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                                            Order is currently in shipment
+                                        </div>
+                                    )}
+
+                                    {order.status === "cancel" && (
+                                        <div className="mb-4 p-3 bg-gray-100 border-l-4 border-gray-500 text-gray-700 rounded-r font-semibold flex items-center gap-2">
+                                            <div className="w-2 h-2 bg-gray-500 rounded-full animate-pulse"></div>
+                                            This order has been cancelled
+                                        </div>
+                                    )}
+
+                                    {order.Paymentstatus === "Review" && (
+                                        <div className="mb-4 p-3 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-r font-semibold flex items-center gap-2">
+                                            <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
+                                            Payment is under review
+                                        </div>
+                                    )}
+
+                                    {/* "Do Something" message for other actionable statuses */}
+
                                     <div className="grid md:grid-cols-2 gap-4 mb-4">
                                         {/* Customer Information */}
                                         <div className="space-y-2">
@@ -458,7 +598,11 @@ const OrderList = () => {
                                                 Associated Information
                                             </h3>
                                             <div className="flex items-center gap-2">
-                                                <span>Total Amount: {order.totalAmount}৳</span>
+                                                <span>Delivery Charge: {order.totalAmount}৳</span>
+                                            </div>
+
+                                            <div className="flex items-center gap-2">
+                                                <span>Total Due: {order.totalDue}৳</span>
                                             </div>
                                             {order.paymentMethod && (
                                                 <div className="flex items-center gap-2">
@@ -477,7 +621,7 @@ const OrderList = () => {
                                             <h3 className="font-semibold text-sm">
                                                 Order Details
                                             </h3>
-                                            {(orderType === "GIFTS" || orderType === "BOOKS_AND_GIFTS") && tShirtSize && (
+                                            {(orderType === "বরই আচার") && tShirtSize && (
                                                 <div className="flex items-center gap-2">
                                                     <Gift className="h-4 w-4 text-gray-500" />
                                                     <span>T-Shirt Size: {tShirtSize}</span>
@@ -504,8 +648,8 @@ const OrderList = () => {
                                             </div>
                                             {order.riderName && ( // Changed from deliveredBy to riderName as per JSON
                                                 <div>
-                                                    <span className="text-sm text-gray-500">
-                                                        Delivered by: {order.riderName}
+                                                    <span className="text-sm  font-semibold text-gray-500">
+                                                        Product Code :  {order.riderName}
                                                     </span>
                                                 </div>
                                             )}
@@ -522,20 +666,40 @@ const OrderList = () => {
                                             <div className="grid gap-3">
                                                 {order.products.map((product, productIndex) => (
                                                     <div
-                                                        key={product.id || productIndex} // Use product.id as key
-                                                        className="flex flex-col md:flex-row md:items-center justify-between p-3 bg-white rounded-lg border"
+                                                        key={product.id || productIndex}
+                                                        className="flex flex-col p-3 bg-white rounded-lg border"
                                                     >
-                                                        <div className="font-medium">{product.name}</div>
-                                                        <div className="flex items-center gap-4 mt-2 md:mt-0">
-                                                            <div className="text-sm font-semibold">
-                                                                <span className="text-gray-500">Price: </span>
-                                                                <span>
-                                                                    {product.discountedPrice
-                                                                        ? product.discountedPrice
-                                                                        : product.price}
-                                                                    ৳
-                                                                </span>
+                                                        <div className="flex items-center justify-between gap-2 mb-3">
+                                                            <div className="font-medium">{product.name}</div>
+                                                            <div className="flex items-center gap-4">
+                                                                <div className="text-sm font-semibold">
+                                                                    <span className="text-gray-500">Price: </span>
+                                                                    <span>
+                                                                        {product.discountedPrice
+                                                                            ? product.discountedPrice
+                                                                            : product.price}
+                                                                        ৳
+                                                                    </span>
+                                                                </div>
                                                             </div>
+                                                        </div>
+
+                                                        {/* Product Images with Codes */}
+                                                        <div className="flex items-center flex-wrap gap-4 overflow-x-auto py-2">
+
+                                                            {product.images && product.images.length > 0 && product.images.map((img, i) => (
+                                                                <div key={i} className="flex flex-col gap-2">
+                                                                    <img
+                                                                        src={img}
+                                                                        alt={`${product.name} ${i + 1}`}
+                                                                        className="w-24 h-24 rounded object-cover"
+                                                                    />
+                                                                    <div className="flex items-center gap-2 text-sm">
+                                                                        <span>Code:</span>
+                                                                        <span className="font-semibold">{product.productCode}{i + 1}</span>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
                                                         </div>
                                                     </div>
                                                 ))}
@@ -543,26 +707,33 @@ const OrderList = () => {
                                         </div>
                                     )}
 
-                                    {/* Action Buttons */}
-                                    {isPending && ( // Only show "Mark as Delivered" if status is "pending"
-                                        <div className="flex justify-end mt-4">
-                                            <TooltipProvider>
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Button
-                                                            onClick={() => handleUpdateDelivery(order.id)}
-                                                            className="bg-green-600 hover:bg-green-700"
-                                                        >
-                                                            Mark as Delivered
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        Update order status to DELIVERED
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            </TooltipProvider>
-                                        </div>
-                                    )}
+                                    {/* Action Buttons for status */}
+                                    <div className="flex gap-2 justify-end mt-4">
+                                        {order.status === "pending" && (
+                                            <Button
+                                                onClick={() => handleMarkAsShipped(order)}
+                                                className="bg-blue-600 hover:bg-blue-700"
+                                            >
+                                                Mark as Shipped
+                                            </Button>
+                                        )}
+                                        {(order.status === "pending" || order.status === "shipment") && (
+                                            <Button
+                                                onClick={() => handleCancelOrder(order.id)}
+                                                className="bg-red-600 hover:bg-red-700"
+                                            >
+                                                Cancel Order
+                                            </Button>
+                                        )}
+                                        {order.Paymentstatus === "Review" && (
+                                            <Button
+                                                onClick={() => handleReviewTransaction(order.id)}
+                                                className="bg-yellow-600 hover:bg-yellow-700"
+                                            >
+                                                Review Transaction
+                                            </Button>
+                                        )}
+                                    </div>
                                 </AccordionContent>
                             </AccordionItem>
                         );
