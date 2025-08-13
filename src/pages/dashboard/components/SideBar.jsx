@@ -29,14 +29,15 @@ import useAxiosSecure from "@/hooks/useAxiosSecure";
 import { toast } from "sonner";
 import "./sideBar.css";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
 const currentYear = new Date().getFullYear();
 
 const NAVIGATION_ITEMS = [
-  // {
-  //   to: "/",
-  //   icon: <ChartNoAxesCombined />,
-  //   label: "Overview",
-  // },
+  {
+    to: "/overview",
+    icon: <ChartNoAxesCombined />,
+    label: "Overview",
+  },
   // {
   //   to: "/team",
   //   icon: <UsersRound />,
@@ -44,7 +45,7 @@ const NAVIGATION_ITEMS = [
   // },
   // category - management
   {
-    to: "/",
+    to: "/category-management",
     icon: <ClipboardPen />,
     label: "Category Management",
   },
@@ -87,22 +88,19 @@ const NAVIGATION_ITEMS = [
 
 const SideBar = () => {
   const navigate = useNavigate();
-  const axiosSecure = useAxiosSecure()
+  const axiosSecure = useAxiosSecure();
+  const { logout, user } = useAuth();
   const handleLogout = async () => {
     try {
-      // Make a call to the logout endpoint
-      await axiosSecure.get("/admin/sign-out"); // Adjust the endpoint URL as per your backend
-      // // Optionally clear any local storage or cookies related to user authentication
-      localStorage.removeItem("token");
-      // Redirect user to login page or home
-      navigate("/sign-in");
-      toast.success("Signed out successfully");
+      // Use AuthContext to logout
+      logout();
+
+      // Redirect to login page
+      navigate("/login");
+      toast.success("Logged out successfully");
     } catch (error) {
       console.error("Logout failed:", error);
-      if (error.status === 0) {
-        console.warn("All fields are required");
-        toast.error("User Not Found ");
-      }
+      toast.error("Logout failed. Please try again.");
     }
   };
 
@@ -184,10 +182,10 @@ const SideBar = () => {
             </div>
           </Link>
 
-          {/* <div className="break-all pr-2">
-            <h4 className="text-sm lg:text-base font-bold">{authdata?.name}</h4>
-            <p className="text-xs text-gray-500">{authdata?.email}</p>
-          </div> */}
+          <div className="break-all pr-2">
+            <h4 className="text-sm lg:text-base font-bold">{user?.name || 'Admin'}</h4>
+            <p className="text-xs text-gray-500">{user?.email || 'admin@gmail.com'}</p>
+          </div>
         </div>
 
         {/* Logout  */}

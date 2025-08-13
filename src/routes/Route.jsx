@@ -18,16 +18,12 @@
 
 // import DashboardHome from "@/pages/dashboard/home/Home";
 import DashboardLayout from "@/pages/dashboard/Layout";
-import { createBrowserRouter } from "react-router-dom";
-// import { PrivateRoutes, SignedInProtectedRoutes } from "./ProtectedRoutes";
+import { createBrowserRouter, Navigate } from "react-router-dom";
+import PrivateRoute from "@/components/PrivateRoute";
+import PublicRoute from "@/components/PublicRoute";
 
-
-;
-
-
-
-
-
+import Login from "@/pages/auth/Login";
+import Home from "@/pages/dashboard/home/Home";
 import CategoryManagement from "@/pages/dashboard/category/CategoryManagement";
 import ProductsManagement from "@/pages/dashboard/course/ProductsManagement";
 import ProductSetting from "@/pages/dashboard/components/forms/products/ProductSetting";
@@ -36,69 +32,60 @@ import OrderList from "@/pages/dashboard/Order/OrderList";
 
 // Define the routing structure using `createBrowserRouter`.
 const Router = createBrowserRouter([
-  // {
-  //   /**
-  //    * Public Route - Sign In Page
-  //    *
-  //    * Path: "/sign-in"
-  //    * This route is protected by `SignedInProtectedRoutes` to prevent access for already signed-in users.
-  //    * Renders the `SignInPage` component.
-  //    */
-  //   path: "/sign-in",
-  //   element: (
-  //     <SignedInProtectedRoutes>
-  //       <SignInPage />
-  //     </SignedInProtectedRoutes>
-  //   ),
-  // },
+  {
+    /**
+     * Public Route - Login Page
+     *
+     * Path: "/login"
+     * This route is protected by `PublicRoute` to prevent access for already authenticated users.
+     * Renders the `Login` component.
+     */
+    path: "/login",
+    element: (
+      <PublicRoute>
+        <Login />
+      </PublicRoute>
+    ),
+  },
   {
     /**
      * Private Route - Dashboard
      *
-     * Path: "/dashboard"
+     * Path: "/"
      * This route is accessible only to authenticated users.
-     * It uses the `PrivateRoutes` component to enforce route protection.
+     * It uses the `PrivateRoute` component to enforce route protection.
      * Renders the `DashboardLayout` as the parent layout.
      */
     path: "/",
     element: (
-      // <PrivateRoutes>
-
-      <DashboardLayout />
-
+      <PrivateRoute>
+        <DashboardLayout />
+      </PrivateRoute>
     ),
     // errorElement: <NotFoundPage />,
     children: [
-      // {
-      //   /**
-      //    * Child Route - Dashboard Home
-      //    *
-      //    * The default child of the dashboard route, rendering the `DashboardHome` component.
-      //    */
-      //   path: "/",
-      //   element: (
-      //     <PrivateRoutes>
-      //       <DashboardHome />
-      //     </PrivateRoutes>
-      //   ),
-      // },
+      {
+        /**
+         * Child Route - Dashboard Home
+         *
+         * The default child of the dashboard route, rendering the `Home` component.
+         */
+        path: "/",
+        element: <Home />,
+      },
       {
         path: "/products-management",
-        element: (
-
-          <ProductsManagement />
-
-        ),
+        element: <ProductsManagement />,
       },
 
 
       {
         path: "/products-management/:id",
-        element: (
-
-          <ProductSetting />
-
-        ),
+        element: <ProductSetting />,
+      },
+      {
+        path: "/overview",
+        element: <Home />,
       },
 
 
@@ -113,12 +100,8 @@ const Router = createBrowserRouter([
       // },
 
       {
-        path: "/",
-        element: (
-
-          <CategoryManagement />
-
-        ),
+        path: "/category-management",
+        element: <CategoryManagement />,
       },
       // course details
 
@@ -129,11 +112,7 @@ const Router = createBrowserRouter([
 
       {
         path: "/order-management",
-        element: (
-
-          <OrderList />
-
-        ),
+        element: <OrderList />,
       },
 
 
@@ -165,6 +144,15 @@ const Router = createBrowserRouter([
 
 
     ],
+  },
+  {
+    /**
+     * Catch-all route - Redirect to login
+     *
+     * This route catches any unknown paths and redirects to the login page.
+     */
+    path: "*",
+    element: <Navigate to="/login" replace />,
   },
 ]);
 
