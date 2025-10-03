@@ -308,6 +308,9 @@ const PaymentManagement = () => {
                                     Transaction Details
                                 </th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Order Code
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     User & Order
                                 </th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -330,7 +333,7 @@ const PaymentManagement = () => {
                         <tbody className="bg-white divide-y divide-gray-200">
                             {filteredPayments.length === 0 ? (
                                 <tr>
-                                    <td colSpan="7" className="px-4 py-8 text-center text-gray-500">
+                                    <td colSpan="8" className="px-4 py-8 text-center text-gray-500">
                                         No payments found
                                     </td>
                                 </tr>
@@ -338,15 +341,13 @@ const PaymentManagement = () => {
                                 filteredPayments.map((payment) => (
                                     <tr key={payment.id} className="hover:bg-gray-50">
                                         <td className="px-4 py-4">
-                                            <div className="space-y-1">
-                                                <div className="text-sm font-medium text-gray-900">
-                                                    {payment.txnId}
-                                                </div>
-                                                {payment.orderCode && (
-                                                    <div className="text-sm text-gray-500">
-                                                        Order: {payment.orderCode}
-                                                    </div>
-                                                )}
+                                            <div className="text-sm font-medium text-gray-900">
+                                                {payment.txnId}
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-4">
+                                            <div className="text-sm font-medium text-blue-600">
+                                                {payment.orderCode || "N/A"}
                                             </div>
                                         </td>
                                         <td className="px-4 py-4">
