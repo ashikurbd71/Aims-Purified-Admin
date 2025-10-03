@@ -18,9 +18,9 @@ const SliderCreateForm = ({ refetch, onClose }) => {
   const validationSchema = Yup.object({
     title: Yup.string().required('Title is required'),
     description: Yup.string().required('Description is required'),
-    imageUrl: Yup.string().url('Must be a valid URL').required('Image URL is required'),
+    imageUrl: Yup.string(),
     rating: Yup.number().min(0).max(5).optional(),
-    link: Yup.string().url('Must be a valid URL').optional(),
+    link: Yup.string().optional(),
     price: Yup.number().required('Price is required').min(0),
     offer: Yup.number().min(0).optional(),
     order: Yup.number().min(0).optional(),
