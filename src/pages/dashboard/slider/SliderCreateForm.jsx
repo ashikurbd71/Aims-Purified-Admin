@@ -4,12 +4,15 @@ import * as Yup from 'yup';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { FileUp } from 'lucide-react';
 import useAxiosSecure from '@/hooks/useAxiosSecure';
 import { toast } from 'sonner';
 import ButtonLoader from '@/components/global/ButtonLoader';
 
 const SliderCreateForm = ({ refetch, onClose }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState('');
   const axiosSecure = useAxiosSecure();
 
   const validationSchema = Yup.object({
@@ -23,11 +26,56 @@ const SliderCreateForm = ({ refetch, onClose }) => {
     order: Yup.number().min(0).optional(),
   });
 
+  // Handle image file change
+  const handleImageChange = (event) => {
+    const file = event.currentTarget.files[0];
+    if (file) {
+      setImagePreview(URL.createObjectURL(file));
+      formik.setFieldValue('imageFile', file);
+      // Clear the URL input when file is selected
+      formik.setFieldValue('imageUrl', '');
+      setUploadedImageUrl('');
+    } else {
+      setImagePreview(null);
+      formik.setFieldValue('imageFile', null);
+    }
+  };
+
+  // Upload image function
+  const uploadImage = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await axiosSecure.post('/upload/images', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response?.status === 200 || response?.status === 201) {
+        toast.success('Image uploaded successfully!');
+        return response.data;
+      } else {
+        toast.error('Image upload failed: Invalid response');
+        return null;
+      }
+    } catch (error) {
+      console.error('Upload failed:', error.message || error);
+      toast.error(
+        'Image upload failed: ' +
+        (error.response?.data?.message || 'Unknown error')
+      );
+      return null;
+    }
+  };
+
   const formik = useFormik({
     initialValues: {
       title: '',
       description: '',
       imageUrl: '',
+      imageFile: null,
       rating: 0,
       link: '',
       price: 0,
@@ -39,7 +87,28 @@ const SliderCreateForm = ({ refetch, onClose }) => {
     onSubmit: async (values) => {
       setIsSubmitting(true);
       try {
-        const response = await axiosSecure.post('/slider', values);
+        let finalImageUrl = values.imageUrl;
+
+        // If image file is selected, upload it first
+        if (values.imageFile) {
+          const uploadResult = await uploadImage(values.imageFile);
+          if (uploadResult && uploadResult.url) {
+            finalImageUrl = uploadResult.url;
+          } else {
+            toast.error('Failed to upload image. Please try again.');
+            setIsSubmitting(false);
+            return;
+          }
+        }
+
+        // Create slider with the final image URL
+        const sliderData = {
+          ...values,
+          imageUrl: finalImageUrl,
+        };
+        delete sliderData.imageFile; // Remove file from data
+
+        const response = await axiosSecure.post('/slider', sliderData);
 
         if (response?.status === 201) {
           toast.success('Slider created successfully!');
@@ -58,6 +127,8 @@ const SliderCreateForm = ({ refetch, onClose }) => {
 
   const handleReset = () => {
     formik.resetForm();
+    setImagePreview(null);
+    setUploadedImageUrl('');
   };
 
   return (
@@ -79,24 +150,6 @@ const SliderCreateForm = ({ refetch, onClose }) => {
             />
             {formik.touched.title && formik.errors.title && (
               <p className='text-red-500 text-sm mt-1'>{formik.errors.title}</p>
-            )}
-          </div>
-
-          {/* Image URL */}
-          <div>
-            <Label htmlFor='imageUrl' className='text-sm font-medium'>
-              Image URL<span className='text-red-500'>*</span>
-            </Label>
-            <Input
-              id='imageUrl'
-              name='imageUrl'
-              type='text'
-              placeholder='Enter image URL'
-              className='mt-1'
-              {...formik.getFieldProps('imageUrl')}
-            />
-            {formik.touched.imageUrl && formik.errors.imageUrl && (
-              <p className='text-red-500 text-sm mt-1'>{formik.errors.imageUrl}</p>
             )}
           </div>
 
@@ -172,6 +225,84 @@ const SliderCreateForm = ({ refetch, onClose }) => {
             />
             {formik.touched.order && formik.errors.order && (
               <p className='text-red-500 text-sm mt-1'>{formik.errors.order}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Image Upload Section */}
+        <div>
+          <Label className='text-sm font-medium'>
+            Slider Image<span className='text-red-500'>*</span>
+          </Label>
+
+          {/* File Upload Option */}
+          <div className='mt-2'>
+            <Label htmlFor='imageFile' className='block text-sm text-gray-600 mb-2'>
+              Upload Image File
+            </Label>
+            <label
+              htmlFor='imageFile'
+              className='border border-dashed border-gray-300 p-6 rounded-md text-center cursor-pointer flex flex-col items-center justify-center gap-2'
+            >
+              <span className='bg-gray-200 dark:text-gray-800 p-3 rounded-full'>
+                <FileUp />
+              </span>
+              <p>
+                <span className='text-sm text-blue-600 font-medium'>
+                  Click here
+                </span>{' '}
+                to upload your file or drag.
+              </p>
+              <span className='text-xs text-gray-500'>
+                Supported Format: JPG, PNG, SVG (Max 10MB)
+              </span>
+              <Input
+                id='imageFile'
+                name='imageFile'
+                type='file'
+                accept='.jpg, .png, .svg'
+                className='hidden'
+                onChange={handleImageChange}
+                onBlur={() => formik.setFieldTouched('imageFile', true)}
+              />
+            </label>
+            {imagePreview && (
+              <div className='mt-2 text-center'>
+                <img
+                  src={imagePreview}
+                  alt='Image Preview'
+                  className='max-w-xs mx-auto h-auto rounded-md object-cover'
+                />
+                <p className='text-sm text-gray-600 mt-1'>
+                  {formik.values.imageFile?.name} ({(formik.values.imageFile?.size / 1024 / 1024).toFixed(2)} MB)
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* OR Divider */}
+          <div className='flex items-center my-4'>
+            <div className='flex-1 border-t border-gray-300'></div>
+            <span className='px-3 text-sm text-gray-500'>OR</span>
+            <div className='flex-1 border-t border-gray-300'></div>
+          </div>
+
+          {/* URL Input Option */}
+          <div>
+            <Label htmlFor='imageUrl' className='block text-sm text-gray-600 mb-2'>
+              Enter Image URL
+            </Label>
+            <Input
+              id='imageUrl'
+              name='imageUrl'
+              type='text'
+              placeholder='Enter image URL'
+              className='mt-1'
+              {...formik.getFieldProps('imageUrl')}
+              disabled={!!formik.values.imageFile}
+            />
+            {formik.touched.imageUrl && formik.errors.imageUrl && (
+              <p className='text-red-500 text-sm mt-1'>{formik.errors.imageUrl}</p>
             )}
           </div>
         </div>
