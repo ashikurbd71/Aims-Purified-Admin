@@ -77,11 +77,7 @@ const NAVIGATION_ITEMS = [
 
 
 
-  {
-    to: "/order-management",
-    icon: <ShoppingCart />,
-    label: "Orders Management",
-  },
+
 
   {
     to: "/slider-management",
@@ -99,6 +95,12 @@ const NAVIGATION_ITEMS = [
     to: "/payment-management",
     icon: <CreditCard />,
     label: "Payment Management",
+  },
+
+  {
+    to: "/order-management",
+    icon: <ShoppingCart />,
+    label: "Orders Management",
   },
 
   // book
