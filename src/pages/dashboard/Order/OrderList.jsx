@@ -159,11 +159,13 @@ const OrderList = () => {
                 const customerName = order.customerName?.toLowerCase() || "";
                 const customerEmail = order.user?.email?.toLowerCase() || "";
                 const customerAddress = order.customerAddress?.toLowerCase() || "";
+                const orderId = order.id?.toLowerCase() || "";
 
                 return (
                     customerName.includes(query) ||
                     customerEmail.includes(query) ||
-                    customerAddress.includes(query)
+                    customerAddress.includes(query) ||
+                    orderId.includes(query)
                 );
             });
         }
@@ -256,11 +258,13 @@ const OrderList = () => {
 
 
             return {
+                "Order ID": order.orderId || "N/A",
                 "Customer Name": order.customerName || "N/A",
                 "Customer Email": order.user?.email || "N/A",
                 "Customer Phone": order.customerPhone || "N/A",
                 "Total Amount": order.totalAmount || "N/A",
-
+                "Coupon Code": order.couponCode || "N/A",
+                "Discount Amount": order.discountAmount || "N/A",
                 "Other Products": otherProductNames || "N/A",
                 "Order Status": order.status || "N/A",
                 "Payment Status": order.Paymentstatus || "N/A", // Corrected typo from Paymentstatus
@@ -451,7 +455,7 @@ const OrderList = () => {
                     <div className="relative w-full md:w-1/3">
                         <Input
                             type="text"
-                            placeholder="Search by name, email, or address..."
+                            placeholder="Search by name, email, address, or order ID..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="pl-10" // Placeholder for potential search icon
@@ -646,8 +650,22 @@ const OrderList = () => {
                                             </div>
 
                                             <div className="flex items-center gap-2">
-                                                <span>Total Due: </span> <span>Full</span>
+                                                <span>Total Due: </span> <span>{order.totalDue}</span>
                                             </div>
+
+                                            {/* Coupon Information */}
+                                            {order.couponCode && (
+                                                <div className="flex items-center gap-2">
+                                                    <Gift className="h-4 w-4 text-green-500" />
+                                                    <span>Coupon Code: {order.couponCode}</span>
+                                                </div>
+                                            )}
+                                            {order.discountAmount && (
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-green-600 font-semibold">Discount: -{order.discountAmount}৳</span>
+                                                </div>
+                                            )}
+
                                             {order.paymentMethod && (
                                                 <div className="flex items-center gap-2">
                                                     <span>Payment Method: {order.paymentMethod}</span>
@@ -685,6 +703,9 @@ const OrderList = () => {
                                             <h3 className="font-semibold text-sm">Order Status</h3>
                                             <div className="flex items-center gap-2">
                                                 <Package className="h-4 w-4 text-gray-500" />
+                                                <span>Order ID: {order.orderId}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
                                                 <span>Status: {order.status}</span>
                                             </div>
                                             <div className="flex items-center gap-2">

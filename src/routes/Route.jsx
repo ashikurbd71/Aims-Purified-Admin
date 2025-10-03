@@ -28,6 +28,9 @@ import CategoryManagement from "@/pages/dashboard/category/CategoryManagement";
 import ProductsManagement from "@/pages/dashboard/course/ProductsManagement";
 import ProductSetting from "@/pages/dashboard/components/forms/products/ProductSetting";
 import OrderList from "@/pages/dashboard/Order/OrderList";
+import SliderManagement from "@/pages/dashboard/slider/SliderManagement";
+import CouponManagement from "@/pages/dashboard/coupon/CouponManagement";
+import PaymentManagement from "@/pages/dashboard/payment/PaymentManagement";
 
 
 // Define the routing structure using `createBrowserRouter`.
@@ -114,6 +117,20 @@ const Router = createBrowserRouter([
         path: "/order-management",
         element: <OrderList />,
       },
+
+      {
+        path: "/slider-management",
+        element: <SliderManagement />,
+      },
+      {
+        path: "/coupon-management",
+        element: <CouponManagement />,
+
+      },
+      {
+        path: "/payment-management",
+        element: <PaymentManagement />,
+      }
 
 
 

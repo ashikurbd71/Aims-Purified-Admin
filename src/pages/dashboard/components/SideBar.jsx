@@ -16,10 +16,12 @@ import {
   ClipboardPenLine,
   Component,
   Container,
+  CreditCard,
   FolderKanban,
   List,
   LogOut,
   ShoppingCart,
+  Sliders,
   Star,
   UsersRound,
 } from "lucide-react";
@@ -81,7 +83,23 @@ const NAVIGATION_ITEMS = [
     label: "Orders Management",
   },
 
+  {
+    to: "/slider-management",
+    icon: <Sliders />,
+    label: "Slider Management",
+  },
 
+  {
+    to: "/coupon-management",
+    icon: <Component />,
+    label: "Coupon Management",
+  },
+
+  {
+    to: "/payment-management",
+    icon: <CreditCard />,
+    label: "Payment Management",
+  },
 
   // book
 ];
