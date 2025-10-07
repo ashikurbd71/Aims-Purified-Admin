@@ -218,92 +218,147 @@ const ProductsManagement = () => {
       </div>
 
       {/* Filters and Search */}
-      <div className="flex flex-col md:flex-row gap-4 justify-between mb-6">
-        {/* Search */}
-        <div className="relative w-full md:w-1/3">
-          <Input
-            type="text"
-            placeholder="Search products..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-            <Search className="h-4 w-4" />
-          </div>
-        </div>
-
-        <div className="flex flex-wrap gap-3">
-          {/* View Toggle */}
-          <div className="bg-gray-100 rounded-md p-1 flex">
-            <Button
-              variant={viewMode === "grid" ? "default" : "ghost"}
-              size="sm"
-              className={`rounded-md ${viewMode === "grid" ? "bg-white shadow-sm" : ""
-                }`}
-              onClick={() => setViewMode("grid")}
-            >
-              <Grid className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === "list" ? "default" : "ghost"}
-              size="sm"
-              className={`rounded-md ${viewMode === "list" ? "bg-white shadow-sm" : ""
-                }`}
-              onClick={() => setViewMode("list")}
-            >
-              <List className="h-4 w-4" />
-            </Button>
+      <div className="bg-white border rounded-lg p-4 mb-6 shadow-sm">
+        <div className="flex flex-col lg:flex-row gap-4 justify-between items-start">
+          {/* Search */}
+          <div className="relative w-full lg:w-1/3">
+            <Input
+              type="text"
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+              <Search className="h-4 w-4" />
+            </div>
           </div>
 
-          {/* Category Dropdown */}
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="border px-3 py-2 rounded-md"
-          >
-            <option value="">-- All Categories --</option>
-            {/* Render categories dynamically */}
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
+          <div className="flex flex-wrap gap-3 items-center">
+            {/* Sort Dropdown - Made more prominent */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">Sort by:</span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="flex items-center gap-2 min-w-[140px]">
+                    <SortAsc className="h-4 w-4" />
+                    <span>
+                      {sortOrder === "newest"
+                        ? "Newest First"
+                        : sortOrder === "oldest"
+                          ? "Oldest First"
+                          : sortOrder === "price_asc"
+                            ? "Price: Low to High"
+                            : "Price: High to Low"}
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setSortOrder("newest")}>
+                    <div className="flex items-center gap-2">
+                      <SortAsc className="h-4 w-4" />
+                      Newest First
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortOrder("oldest")}>
+                    <div className="flex items-center gap-2">
+                      <SortAsc className="h-4 w-4 rotate-180" />
+                      Oldest First
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setSortOrder("price_asc")}>
+                    Price: Low to High
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortOrder("price_desc")}>
+                    Price: High to Low
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
 
-          {/* Sort Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <SortAsc className="h-4 w-4" />
-                <span>
-                  {sortOrder === "newest"
-                    ? "Newest"
-                    : sortOrder === "oldest"
-                      ? "Oldest"
-                      : sortOrder === "price_asc"
-                        ? "Price: Low to High"
-                        : "Price: High to Low"}
-                </span>
+            {/* Category Filter */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">Category:</span>
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="border px-3 py-2 rounded-md min-w-[140px]"
+              >
+                <option value="">All Categories</option>
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Clear Filters Button */}
+            {(searchQuery || selectedCategory || sortOrder !== "newest") && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSearchQuery("");
+                  setSelectedCategory("");
+                  setSortOrder("newest");
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                Clear Filters
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setSortOrder("newest")}>
-                Newest
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSortOrder("oldest")}>
-                Oldest
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setSortOrder("price_asc")}>
-                Price: Low to High
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSortOrder("price_desc")}>
-                Price: High to Low
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            )}
+
+            {/* View Toggle */}
+            <div className="bg-gray-100 rounded-md p-1 flex ml-auto">
+              <Button
+                variant={viewMode === "grid" ? "default" : "ghost"}
+                size="sm"
+                className={`rounded-md ${viewMode === "grid" ? "bg-white shadow-sm" : ""
+                  }`}
+                onClick={() => setViewMode("grid")}
+              >
+                <Grid className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === "list" ? "default" : "ghost"}
+                size="sm"
+                className={`rounded-md ${viewMode === "list" ? "bg-white shadow-sm" : ""
+                  }`}
+                onClick={() => setViewMode("list")}
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </div>
+
+        {/* Active Filters Display */}
+        {(searchQuery || selectedCategory || sortOrder !== "newest") && (
+          <div className="mt-3 pt-3 border-t border-gray-100">
+            <div className="flex flex-wrap gap-2 items-center">
+              <span className="text-sm text-gray-500">Active filters:</span>
+              {searchQuery && (
+                <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                  Search: "{searchQuery}"
+                </span>
+              )}
+              {selectedCategory && (
+                <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                  Category: {selectedCategory}
+                </span>
+              )}
+              {sortOrder !== "newest" && (
+                <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">
+                  Sort: {sortOrder === "oldest" ? "Oldest First" :
+                    sortOrder === "price_asc" ? "Price: Low to High" :
+                      "Price: High to Low"}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Product Content */}

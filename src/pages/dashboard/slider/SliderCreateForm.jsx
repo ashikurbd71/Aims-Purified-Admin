@@ -8,22 +8,33 @@ import { FileUp } from 'lucide-react';
 import useAxiosSecure from '@/hooks/useAxiosSecure';
 import { toast } from 'sonner';
 import ButtonLoader from '@/components/global/ButtonLoader';
+import axios from 'axios';
 
 const SliderCreateForm = ({ refetch, onClose }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState('');
   const axiosSecure = useAxiosSecure();
+  const IMGBB_API_KEY = "90087a428cac94ac2e8021a26aeb9f9e";
 
   const validationSchema = Yup.object({
     title: Yup.string().required('Title is required'),
     description: Yup.string().required('Description is required'),
-    imageUrl: Yup.string(),
+    imageUrl: Yup.string().optional(),
+    imageFile: Yup.mixed()
+      .test('fileSize', 'Image is too large (max 10MB)', (value) => {
+        return !value || value.size <= 10 * 1024 * 1024;
+      })
+      .test('fileType', 'Unsupported file format for image', (value) => {
+        return !value || ['image/jpeg', 'image/png', 'image/svg+xml'].includes(value.type);
+      }),
     rating: Yup.number().min(0).max(5).optional(),
     link: Yup.string().optional(),
     price: Yup.number().required('Price is required').min(0),
     offer: Yup.number().min(0).optional(),
     order: Yup.number().min(0).optional(),
+  }).test('image-required', 'Please provide either an image file or image URL', function (values) {
+    return !!(values.imageFile || values.imageUrl);
   });
 
   // Handle image file change
@@ -41,31 +52,34 @@ const SliderCreateForm = ({ refetch, onClose }) => {
     }
   };
 
-  // Upload image function
+  // Upload image function using ImgBB
   const uploadImage = async (file) => {
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('image', file); // Correct field name for ImgBB
 
     try {
-      const response = await axiosSecure.post('/upload/images', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await axios.post(
+        `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        }
+      );
 
-      if (response?.status === 200 || response?.status === 201) {
+      // Correct response path for ImgBB
+      if ((response?.status === 200 || response?.status === 201) && response?.data?.data?.url) {
         toast.success('Image uploaded successfully!');
-        return response.data;
+        return { url: response.data.data.url };
       } else {
+        console.error('Image upload failed: Invalid response from ImgBB', response);
         toast.error('Image upload failed: Invalid response');
         return null;
       }
     } catch (error) {
-      console.error('Upload failed:', error.message || error);
-      toast.error(
-        'Image upload failed: ' +
-        (error.response?.data?.message || 'Unknown error')
-      );
+      console.error('Error uploading image to ImgBB:', error);
+      // Provide more specific error message from ImgBB if available
+      const imgbbErrorMessage = error.response?.data?.error?.message || error.message;
+      toast.error(`Image upload failed: ${imgbbErrorMessage}`);
       return null;
     }
   };
@@ -86,6 +100,7 @@ const SliderCreateForm = ({ refetch, onClose }) => {
     validationSchema,
     onSubmit: async (values) => {
       setIsSubmitting(true);
+      toast.loading('Creating slider...');
       try {
         let finalImageUrl = values.imageUrl;
 
@@ -277,6 +292,9 @@ const SliderCreateForm = ({ refetch, onClose }) => {
                   {formik.values.imageFile?.name} ({(formik.values.imageFile?.size / 1024 / 1024).toFixed(2)} MB)
                 </p>
               </div>
+            )}
+            {formik.touched.imageFile && formik.errors.imageFile && (
+              <p className='text-red-500 text-sm mt-1'>{formik.errors.imageFile}</p>
             )}
           </div>
 

@@ -22,6 +22,24 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
     Download,
     Phone,
     Mail,
@@ -38,6 +56,7 @@ import {
     Calendar,
     User,
     Receipt,
+    Trash2,
 } from "lucide-react";
 
 import useAxiosSecure from "@/hooks/useAxiosSecure";
@@ -49,6 +68,7 @@ const PaymentManagement = () => {
     const [paymentData, paymentRefetch] = usePaymentData();
     const [filteredPayments, setFilteredPayments] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
+    const axiosSecure = useAxiosSecure();
 
     // Filter states
     const [selectedStatus, setSelectedStatus] = useState("ALL");
@@ -57,7 +77,12 @@ const PaymentManagement = () => {
     // Loading states for buttons
     const [loadingStates, setLoadingStates] = useState({
         export: false,
+        delete: {},
     });
+
+    // Modal states
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [selectedPayment, setSelectedPayment] = useState(null);
 
     // Update filtered payments when paymentData or filters change
     useEffect(() => {
@@ -170,6 +195,39 @@ const PaymentManagement = () => {
             hour: "2-digit",
             minute: "2-digit",
         });
+    };
+
+    // Handle opening payment detail modal
+    const handleViewPaymentDetails = (payment) => {
+        setSelectedPayment(payment);
+        setIsDetailModalOpen(true);
+    };
+
+    // Handle delete payment
+    const handleDeletePayment = async (paymentId) => {
+        setLoadingStates(prev => ({
+            ...prev,
+            delete: { ...prev.delete, [paymentId]: true }
+        }));
+
+        try {
+            const response = await axiosSecure.delete(`/payments/${paymentId}`);
+
+            if (response.data.success) {
+                toast.success("Payment deleted successfully!");
+                paymentRefetch(); // Refresh the payment data
+            } else {
+                toast.error(response.data.message || "Failed to delete payment");
+            }
+        } catch (error) {
+            console.error("Delete payment error:", error);
+            toast.error("Failed to delete payment. Please try again.");
+        } finally {
+            setLoadingStates(prev => ({
+                ...prev,
+                delete: { ...prev.delete, [paymentId]: false }
+            }));
+        }
     };
 
     return (
@@ -402,25 +460,74 @@ const PaymentManagement = () => {
                                             </div>
                                         </td>
                                         <td className="px-4 py-4">
-                                            <TooltipProvider>
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => {
-                                                                // View payment details
-                                                                console.log("View payment:", payment);
-                                                            }}
-                                                        >
-                                                            <Eye className="w-4 h-4" />
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>View Details</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            </TooltipProvider>
+                                            <div className="flex items-center gap-2">
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => handleViewPaymentDetails(payment)}
+                                                            >
+                                                                <Eye className="w-4 h-4" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>View Details</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <TooltipProvider>
+                                                            <Tooltip>
+                                                                <TooltipTrigger asChild>
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        size="sm"
+                                                                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                                        disabled={loadingStates.delete[payment.id]}
+                                                                    >
+                                                                        {loadingStates.delete[payment.id] ? (
+                                                                            <ButtonLoader />
+                                                                        ) : (
+                                                                            <Trash2 className="w-4 h-4" />
+                                                                        )}
+                                                                    </Button>
+                                                                </TooltipTrigger>
+                                                                <TooltipContent>
+                                                                    <p>Delete Payment</p>
+                                                                </TooltipContent>
+                                                            </Tooltip>
+                                                        </TooltipProvider>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>Delete Payment</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                Are you sure you want to delete this payment? This action cannot be undone.
+                                                                <br />
+                                                                <br />
+                                                                <strong>Transaction ID:</strong> {payment.txnId}
+                                                                <br />
+                                                                <strong>Amount:</strong> {formatCurrency(payment.amount)}
+                                                                <br />
+                                                                <strong>Status:</strong> {payment.status}
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                            <AlertDialogAction
+                                                                onClick={() => handleDeletePayment(payment.id)}
+                                                                className="bg-red-600 hover:bg-red-700"
+                                                            >
+                                                                Delete Payment
+                                                            </AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))
@@ -441,6 +548,140 @@ const PaymentManagement = () => {
                     </div>
                 </div>
             </Card>
+
+            {/* Payment Detail Modal */}
+            <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Receipt className="w-5 h-5" />
+                            Payment Details
+                        </DialogTitle>
+                    </DialogHeader>
+
+                    {selectedPayment && (
+                        <div className="space-y-6">
+                            {/* Transaction Overview */}
+                            <Card className="p-4">
+                                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                                    <CreditCard className="w-5 h-5" />
+                                    Transaction Overview
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <Label className="text-sm font-medium text-gray-600">Transaction ID</Label>
+                                        <p className="text-sm text-gray-900 font-mono">{selectedPayment.txnId}</p>
+                                    </div>
+                                    <div>
+                                        <Label className="text-sm font-medium text-gray-600">Order Code</Label>
+                                        <p className="text-sm text-gray-900">{selectedPayment.orderCode || "N/A"}</p>
+                                    </div>
+                                    <div>
+                                        <Label className="text-sm font-medium text-gray-600">User ID</Label>
+                                        <p className="text-sm text-gray-900">{selectedPayment.userId}</p>
+                                    </div>
+                                    <div>
+                                        <Label className="text-sm font-medium text-gray-600">Status</Label>
+                                        <Badge className={getStatusBadgeColor(selectedPayment.status)}>
+                                            {selectedPayment.status}
+                                        </Badge>
+                                    </div>
+                                </div>
+                            </Card>
+
+                            {/* Payment Information */}
+                            <Card className="p-4">
+                                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                                    <DollarSign className="w-5 h-5" />
+                                    Payment Information
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <Label className="text-sm font-medium text-gray-600">Amount</Label>
+                                        <p className="text-lg font-bold text-gray-900">{formatCurrency(selectedPayment.amount)}</p>
+                                    </div>
+                                    <div>
+                                        <Label className="text-sm font-medium text-gray-600">Payment Method</Label>
+                                        <p className="text-sm text-gray-900">BangoPay</p>
+                                    </div>
+                                    {selectedPayment.bangoPayTransactionId && (
+                                        <div className="md:col-span-2">
+                                            <Label className="text-sm font-medium text-gray-600">BangoPay Transaction ID</Label>
+                                            <p className="text-sm text-gray-900 font-mono">{selectedPayment.bangoPayTransactionId}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </Card>
+
+                            {/* Discount Information */}
+                            {(selectedPayment.couponCode || selectedPayment.discountAmount > 0) && (
+                                <Card className="p-4">
+                                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                                        <Gift className="w-5 h-5" />
+                                        Discount Information
+                                    </h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {selectedPayment.couponCode && (
+                                            <div>
+                                                <Label className="text-sm font-medium text-gray-600">Coupon Code</Label>
+                                                <p className="text-sm text-gray-900 font-mono">{selectedPayment.couponCode}</p>
+                                            </div>
+                                        )}
+                                        {selectedPayment.discountAmount > 0 && (
+                                            <div>
+                                                <Label className="text-sm font-medium text-gray-600">Discount Amount</Label>
+                                                <p className="text-sm text-green-600 font-bold">{formatCurrency(selectedPayment.discountAmount)}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </Card>
+                            )}
+
+                            {/* Order Information */}
+                            {selectedPayment.orderIds && selectedPayment.orderIds.length > 0 && (
+                                <Card className="p-4">
+                                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                                        <Package className="w-5 h-5" />
+                                        Order Information
+                                    </h3>
+                                    <div>
+                                        <Label className="text-sm font-medium text-gray-600">Number of Orders</Label>
+                                        <p className="text-sm text-gray-900">{selectedPayment.orderIds.length}</p>
+                                        <div className="mt-2">
+                                            <Label className="text-sm font-medium text-gray-600">Order IDs</Label>
+                                            <div className="flex flex-wrap gap-2 mt-1">
+                                                {selectedPayment.orderIds.map((orderId, index) => (
+                                                    <Badge key={index} variant="outline" className="text-xs">
+                                                        {orderId}
+                                                    </Badge>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Card>
+                            )}
+
+                            {/* Timestamps */}
+                            <Card className="p-4">
+                                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                                    <Calendar className="w-5 h-5" />
+                                    Timestamps
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <Label className="text-sm font-medium text-gray-600">Created At</Label>
+                                        <p className="text-sm text-gray-900">{formatDate(selectedPayment.createdAt)}</p>
+                                    </div>
+                                    <div>
+                                        <Label className="text-sm font-medium text-gray-600">Last Updated</Label>
+                                        <p className="text-sm text-gray-900">{formatDate(selectedPayment.updatedAt)}</p>
+                                    </div>
+                                </div>
+                            </Card>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };
