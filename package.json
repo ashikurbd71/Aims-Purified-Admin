@@ -46,6 +46,7 @@
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.0.2",
     "react-select": "^5.9.0",
+    "recharts": "^3.2.1",
     "sonner": "^1.7.1",
     "sweetalert2": "^11.6.13",
     "tailwind-merge": "^2.5.5",

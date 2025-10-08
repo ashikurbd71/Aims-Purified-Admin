@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import WelcomeMessage from './WelcomeMessage';
 import QuickStats from './QuickStats';
+import DashboardCharts from './DashboardCharts';
 import {
     Package,
     Users,
@@ -327,6 +328,12 @@ const DashboardOverview = () => {
                         </Card>
                     ))}
                 </div>
+            </div>
+
+            {/* Charts Section */}
+            <div>
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4">Analytics & Reports</h3>
+                <DashboardCharts stats={stats} />
             </div>
         </div>
     );

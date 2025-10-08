@@ -496,13 +496,11 @@ const ProductCreateForm = ({ refetch, onClose }) => {
             </span>
             <Input
               id="thumbnailImage"
-              name="thumbnailImage"
               type="file"
-              accept=".jpg, .png, .svg"
-              className="hidden"
+              accept="image/*"
               onChange={handleThumbnailImageChange}
-              onBlur={() => formik.setFieldTouched('thumbnailImage', true)}
             />
+
           </label>
           {thumbnailPreview && (
             <div className="mt-2 text-center">
@@ -522,6 +520,7 @@ const ProductCreateForm = ({ refetch, onClose }) => {
           <Label htmlFor="images" className="font-medium block">
             Images (Optional)
           </Label>
+
           <label
             htmlFor="images"
             className="border border-dashed border-gray-300 p-6 rounded-md text-center cursor-pointer flex flex-col items-center justify-center gap-2 mt-2"
@@ -530,30 +529,35 @@ const ProductCreateForm = ({ refetch, onClose }) => {
               <FileUp />
             </span>
             <p>
-              <span className="text-sm text-blue-600 font-medium">
-                Click here
-              </span>{" "}
+              <span className="text-sm text-blue-600 font-medium">Click here</span>{" "}
               to upload your files.
             </p>
             <span className="text-xs text-gray-500">
               Supported Format: JPG, PNG, SVG (Max 10MB each)
             </span>
+            {/* 👇 hidden এর বদলে sr-only দাও */}
             <Input
               id="images"
               name="images"
               type="file"
               multiple
               accept=".jpg, .png, .svg"
-              className=" hidden "
+              className="sr-only"
               onChange={handleImagesChange}
               onBlur={() => formik.setFieldTouched('images', true)}
             />
           </label>
+
+          {/* Preview */}
           {imagesPreviews.length > 0 && (
             <div className="mt-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
               {imagesPreviews.map((src, index) => (
                 <div key={index} className="relative">
-                  <img src={src} alt={`Image ${index + 1} Preview`} className="w-full h-24 object-cover rounded-md" />
+                  <img
+                    src={src}
+                    alt={`Image ${index + 1} Preview`}
+                    className="w-full h-24 object-cover rounded-md"
+                  />
                   <p className="text-xs text-gray-600 mt-1 truncate">
                     {formik.values.images[index]?.name}
                   </p>
@@ -561,9 +565,11 @@ const ProductCreateForm = ({ refetch, onClose }) => {
               ))}
             </div>
           )}
-          {formik.touched.images && formik.errors.images ? (
+
+          {/* Error message */}
+          {formik.touched.images && formik.errors.images && (
             <p className="text-red-500 text-sm mt-1">{formik.errors.images}</p>
-          ) : null}
+          )}
         </div>
 
         {/* Submit Button */}
