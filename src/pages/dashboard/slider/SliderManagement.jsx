@@ -15,9 +15,20 @@ import { Switch } from '@/components/ui/switch';
 
 const SliderManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingSlider, setEditingSlider] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const axiosSecure = useAxiosSecure();
 
   const handleModalClose = () => setIsModalOpen(false);
+  const handleEditModalClose = () => {
+    setIsEditModalOpen(false);
+    setEditingSlider(null);
+  };
+
+  const handleEdit = (slider) => {
+    setEditingSlider(slider);
+    setIsEditModalOpen(true);
+  };
 
   const { data: sliders, refetch, isLoading } = useQuery({
     queryKey: ['slidersManagement'],
@@ -67,6 +78,18 @@ const SliderManagement = () => {
             <SliderCreateForm refetch={refetch} onClose={handleModalClose} />
           </DialogContent>
         </Dialog>
+
+        {/* Edit Modal */}
+        <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+          <DialogContent className="p-8 min-w-[45%] max-h-screen overflow-auto">
+            <SliderCreateForm
+              refetch={refetch}
+              onClose={handleEditModalClose}
+              editingSlider={editingSlider}
+              isEdit={true}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
       <div className="border rounded-3xl mt-6">
         <div className="p-4 md:px-6 py-4">
@@ -112,9 +135,36 @@ const SliderManagement = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2 items-center justify-center">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={() => handleEdit(slider)}
+                                className="hover:text-blue-500"
+                              >
+                                <Pen className="p-1" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Edit Slider</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <button className="hover:text-red-500"><Trash className="p-1" /></button>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button className="hover:text-red-500">
+                                    <Trash className="p-1" />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Delete Slider</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>

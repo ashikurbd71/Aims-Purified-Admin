@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { Label } from '@/components/ui/label';
@@ -10,18 +10,26 @@ import { toast } from 'sonner';
 import ButtonLoader from '@/components/global/ButtonLoader';
 import axios from 'axios';
 
-const SliderCreateForm = ({ refetch, onClose }) => {
+const SliderCreateForm = ({ refetch, onClose, editingSlider, isEdit = false }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState('');
   const axiosSecure = useAxiosSecure();
   const IMGBB_API_KEY = "90087a428cac94ac2e8021a26aeb9f9e";
 
+  // Set image preview when editing
+  useEffect(() => {
+    if (isEdit && editingSlider?.imageUrl) {
+      setImagePreview(editingSlider.imageUrl);
+    }
+  }, [isEdit, editingSlider]);
+
   const validationSchema = Yup.object({
     title: Yup.string().required('Title is required'),
     description: Yup.string().required('Description is required'),
     imageUrl: Yup.string().optional(),
     imageFile: Yup.mixed()
+      .nullable()
       .test('fileSize', 'Image is too large (max 10MB)', (value) => {
         return !value || value.size <= 10 * 1024 * 1024;
       })
@@ -34,6 +42,11 @@ const SliderCreateForm = ({ refetch, onClose }) => {
     offer: Yup.number().min(0).optional(),
     order: Yup.number().min(0).optional(),
   }).test('image-required', 'Please provide either an image file or image URL', function (values) {
+    // For edit mode, if there's an existing imageUrl, it's valid
+    if (isEdit && editingSlider?.imageUrl && !values.imageFile) {
+      return true;
+    }
+    // For create mode or when changing image, require either file or URL
     return !!(values.imageFile || values.imageUrl);
   });
 
@@ -48,7 +61,7 @@ const SliderCreateForm = ({ refetch, onClose }) => {
       setUploadedImageUrl('');
     } else {
       setImagePreview(null);
-      formik.setFieldValue('imageFile', null);
+      formik.setFieldValue('imageFile', undefined);
     }
   };
 
@@ -86,21 +99,21 @@ const SliderCreateForm = ({ refetch, onClose }) => {
 
   const formik = useFormik({
     initialValues: {
-      title: '',
-      description: '',
-      imageUrl: '',
-      imageFile: null,
-      rating: 0,
-      link: '',
-      price: 0,
-      offer: 0,
-      order: 0,
-      isActive: true,
+      title: editingSlider?.title || '',
+      description: editingSlider?.description || '',
+      imageUrl: editingSlider?.imageUrl || '',
+      imageFile: undefined,
+      rating: editingSlider?.rating || 0,
+      link: editingSlider?.link || '',
+      price: editingSlider?.price || 0,
+      offer: editingSlider?.offer || 0,
+      order: editingSlider?.order || 0,
+      isActive: editingSlider?.isActive ?? true,
     },
     validationSchema,
     onSubmit: async (values) => {
       setIsSubmitting(true);
-      toast.loading('Creating slider...');
+      toast.loading(isEdit ? 'Updating slider...' : 'Creating slider...');
       try {
         let finalImageUrl = values.imageUrl;
 
@@ -116,24 +129,35 @@ const SliderCreateForm = ({ refetch, onClose }) => {
           }
         }
 
-        // Create slider with the final image URL
+        // Prepare slider data with proper number conversion
         const sliderData = {
           ...values,
           imageUrl: finalImageUrl,
+          rating: Number(values.rating) || 0,
+          price: Number(values.price) || 0,
+          offer: Number(values.offer) || 0,
+          order: Number(values.order) || 0,
         };
         delete sliderData.imageFile; // Remove file from data
 
-        const response = await axiosSecure.post('/slider', sliderData);
+        let response;
+        if (isEdit && editingSlider?.id) {
+          // Update existing slider
+          response = await axiosSecure.patch(`/slider/${editingSlider.id}`, sliderData);
+        } else {
+          // Create new slider
+          response = await axiosSecure.post('/slider', sliderData);
+        }
 
-        if (response?.status === 201) {
-          toast.success('Slider created successfully!');
+        if (response?.status === 200 || response?.status === 201) {
+          toast.success(isEdit ? 'Slider updated successfully!' : 'Slider created successfully!');
           handleReset();
           refetch();
           if (onClose) onClose();
         }
       } catch (error) {
-        console.error('Error creating slider:', error);
-        toast.error('Failed to create slider. Please try again.');
+        console.error(`Error ${isEdit ? 'updating' : 'creating'} slider:`, error);
+        toast.error(`Failed to ${isEdit ? 'update' : 'create'} slider. Please try again.`);
       } finally {
         setIsSubmitting(false);
       }
@@ -141,7 +165,24 @@ const SliderCreateForm = ({ refetch, onClose }) => {
   });
 
   const handleReset = () => {
-    formik.resetForm();
+    if (isEdit && editingSlider) {
+      // Reset to editing slider values
+      formik.setValues({
+        title: editingSlider.title || '',
+        description: editingSlider.description || '',
+        imageUrl: editingSlider.imageUrl || '',
+        imageFile: undefined,
+        rating: editingSlider.rating || 0,
+        link: editingSlider.link || '',
+        price: editingSlider.price || 0,
+        offer: editingSlider.offer || 0,
+        order: editingSlider.order || 0,
+        isActive: editingSlider.isActive ?? true,
+      });
+    } else {
+      // Reset to default values
+      formik.resetForm();
+    }
     setImagePreview(null);
     setUploadedImageUrl('');
   };
@@ -288,9 +329,15 @@ const SliderCreateForm = ({ refetch, onClose }) => {
                   alt='Image Preview'
                   className='max-w-xs mx-auto h-auto rounded-md object-cover'
                 />
-                <p className='text-sm text-gray-600 mt-1'>
-                  {formik.values.imageFile?.name} ({(formik.values.imageFile?.size / 1024 / 1024).toFixed(2)} MB)
-                </p>
+                {formik.values.imageFile ? (
+                  <p className='text-sm text-gray-600 mt-1'>
+                    {formik.values.imageFile?.name} ({(formik.values.imageFile?.size / 1024 / 1024).toFixed(2)} MB)
+                  </p>
+                ) : isEdit && editingSlider?.imageUrl ? (
+                  <p className='text-sm text-gray-600 mt-1'>
+                    Current image
+                  </p>
+                ) : null}
               </div>
             )}
             {formik.touched.imageFile && formik.errors.imageFile && (
@@ -368,7 +415,7 @@ const SliderCreateForm = ({ refetch, onClose }) => {
             className='w-full lg:w-48'
             disabled={isSubmitting}
           >
-            {isSubmitting ? <ButtonLoader /> : 'Create Slider'}
+            {isSubmitting ? <ButtonLoader /> : (isEdit ? 'Update Slider' : 'Create Slider')}
           </Button>
           <Button
             type='button'
