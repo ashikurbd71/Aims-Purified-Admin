@@ -362,9 +362,7 @@ const PaymentManagement = () => {
                     <table className="w-full">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Transaction Details
-                                </th>
+
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Order Code
                                 </th>
@@ -398,11 +396,7 @@ const PaymentManagement = () => {
                             ) : (
                                 filteredPayments.map((payment) => (
                                     <tr key={payment.id} className="hover:bg-gray-50">
-                                        <td className="px-4 py-4">
-                                            <div className="text-sm font-medium text-gray-900">
-                                                {payment.txnId}
-                                            </div>
-                                        </td>
+
                                         <td className="px-4 py-4">
                                             <div className="text-sm font-medium text-blue-600">
                                                 {payment.orderCode || "N/A"}

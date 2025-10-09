@@ -9,7 +9,7 @@ const usePaymentData = () => {
             const res = await axiosSecure.get(`/payments`);
 
             console.log("Payment data fetched:", res?.data);
-            return res?.data?.data; // ✅ Return only the data part
+            return res?.data; // ✅ Return only the data part
         },
         staleTime: Infinity,
         cacheTime: Infinity,
